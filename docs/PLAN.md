@@ -313,16 +313,39 @@ neuron. Step 6 should describe it in those terms.
 Use 4x3 (98.4%) or 5x3 (99.9%), where cones can be listed exactly, to build
 and debug the explanation checks before applying them to 32x10.
 
-- [ ] Explain every common cone: its linear map, where the decision boundary
+- [x] Explain every common cone: its linear map, where the decision boundary
       falls inside it, and the role of the alternating sign-flipped pairs.
-- [ ] Hand-built rebuild; resample check.
-- [ ] **Accuracy estimate from the mechanism**: compute cone volumes (solid
-      angles) and the correct fraction within each, and compare with measured
-      accuracy.
-- [ ] Write-up in `results/2nd_argmax_4x3/README.md` (or 5x3).
+- [x] Hand-built rebuild; resample check.
+- [x] **Exact accuracy from the geometry**: `algzoo_interp/cones.py`
+      enumerates every cone of a seq_len-3 model exactly (spherical
+      polygons) and splits each by predicted and true class.
+- [x] Write-up in [`results/2nd_argmax_4x3/README.md`](../results/2nd_argmax_4x3/README.md),
+      all numbers from `scripts/explain_small.py` and `scripts/exact_accuracy.py`.
 
 **Done when** all four explanation checks from [Method](#method-how-each-model-gets-analysed-and-judged)
-pass on the small model.
+pass on the small model. **Three pass and one is partial:**
+
+- **Mechanism.** For 3 inputs the 2nd largest is the median. The model is
+  sign-symmetric (f(−x) = f(x) on 99.6% of inputs, as the median is). Each
+  step's on-pair records one comparison (x0 > 0, x1 > x0, x2 > x1). The
+  readout depends only on v/u (v = h1 + h2, u = h0 + h3) with two thresholds,
+  and u ≈ |4d − e|, v ≈ |4.7d + e| in terms of consecutive differences.
+- **Exact accuracy: pass.** 70 cones; exact 0.98455 vs sampled 0.98443 ±
+  0.00012, and within one standard error for 3x3, 5x3 and 8x3 too. 87% of
+  the error is in the 24% of inputs where a neuron pair splits ("mixed") or
+  all neurons are off at the last step.
+- **Resample check: pass.** Swapping final states between inputs with the
+  same v/u keeps 99.76% of predictions.
+- **Rebuild: partial.** The ratio readout reproduces the model on 99.78% of
+  inputs; the full two-number formula on 98.84% (just short of 99%). Forcing
+  pairs to switch together makes the model *more* accurate (99.15%): about
+  half its error comes from mixed pairs, half is built into the design.
+
+**Method lessons for step 6.** Exact cone enumeration doesn't scale to 10
+steps (too many cones), but the pieces that worked here do: finding a
+symmetry, reducing the readout to a few combined quantities and thresholds,
+and attributing error to states where neurons that should switch together
+don't.
 
 ### Step 6: Quantitative explanation of 32x10
 
