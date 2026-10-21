@@ -81,3 +81,27 @@ def state_r2(cache, steps, level):
     feats = [pick(f) for f in continuous_features(x, state, level)]
     h = cache.h.cpu()[:, steps].reshape(-1, cache.h.shape[-1])
     return cellwise_r2(h, pick(cells), feats)
+
+
+def p_on_by_lag(cache, lag, min_count):
+    """P(on | lag = k) pooled over steps, and the max spread across steps: two [hidden, T]."""
+    mask = cache.mask.cpu()
+    batch, T, H = mask.shape
+    per_t = th.full((T, T, H), float("nan"))  # [t, k, neuron]
+    pooled_on = th.zeros(T, H)
+    pooled_n = th.zeros(T)
+    for t in range(1, T):
+        for k in range(t + 1):
+            sel = lag[:, t] == k
+            n = int(sel.sum())
+            if n < min_count:
+                continue
+            on = mask[sel, t].float()
+            per_t[t, k] = on.mean(0)
+            pooled_on[k] += on.sum(0)
+            pooled_n[k] += n
+    pooled = (pooled_on / pooled_n.clamp(min=1)[:, None]).T
+    pooled[:, pooled_n == 0] = float("nan")
+    spread = (per_t.nan_to_num(nan=-1).amax(0) - per_t.nan_to_num(nan=2).amin(0)).T
+    spread[spread < 0] = float("nan")
+    return pooled, spread

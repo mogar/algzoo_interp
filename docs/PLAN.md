@@ -275,17 +275,38 @@ Results:
 
 ### Step 4: Generality across seeds and sizes
 
-- [ ] Run the dictionary on 32x10 seeds 0-4 and on `example_2nd_argmax()`
-      (16x10). Do event detectors, memory and reset neurons appear under
-      different neuron numbers?
-- [ ] Run on a few smaller models (hidden 4-8, seq_len 4-6) to see which
-      roles survive at small sizes and what the low-accuracy models lack.
+- [x] `scripts/compare_models.py`: role matching (best neuron per key
+      feature and event), reset share, largest readout weight, clock neurons
+      and state R² for 13 models: 32x10 seeds 0-4, zoo 16x10, blog 16x10,
+      handcrafted 10, 8x10, 8x6, 8x5, 8x4, 4x3 → `results/compare/compare.md`.
+- [x] Causal tests on 32x10 seeds 1-4 with each seed's own neuron numbers;
+      `scripts/summarize_causal.py` → `results/compare/causal.md`.
+- [x] Smaller and low-accuracy models (in the same table).
 - [ ] Optional: training checkpoints (`n_seqs`) of 32x10 to see the order in
-      which roles appear.
-- [ ] Compare the 32x10 mechanism with the handcrafted model's scheme.
+      which roles appear. Not done.
+- [x] Compare with the handcrafted scheme (in the same table).
 
 **Done when** there's a table of roles × models and a short note on what is
-universal and what is seed-specific.
+universal and what is seed-specific. **Done**: see
+[HYPOTHESES.md §E](HYPOTHESES.md#e-generality-other-seeds-and-model-sizes-roadmap-step-4).
+In brief:
+
+- **Universal in all five 32x10 seeds:** an exact new-max detector
+  (`max0 − max0_prev`, R² 1.00), its veto on the last position (largest
+  readout weight; causal in every seed), a "below the 2nd max" neuron with
+  its own last-position veto (causal in every seed), resets from the
+  detector, a lag clock (4-8 neurons), and minimal-state encoding (median R²
+  0.92-0.95).
+- **Seed-specific:** whether the detector is the *only* carrier of a new max
+  (seed 0 yes; others share it), the importance of the top-2 detector and of
+  the resets, and whether the running 2nd max sits in one neuron.
+- **16x10 has two solution types**: the zoo model is 32x10-like, the blog
+  model is handcrafted-like. The failing 8x10 model lacks the detector
+  altogether; 8x6 and 8x5 have the detector but no clock.
+
+So an explanation of 32x10 seed 0 should transfer to other seeds at the level
+of mechanisms (detector, vetoes, clock, minimal state), but not neuron by
+neuron. Step 6 should describe it in those terms.
 
 ### Step 5: Complete explanation of a small model (methods track)
 

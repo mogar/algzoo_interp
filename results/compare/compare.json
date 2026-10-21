@@ -1,0 +1,703 @@
+{
+  "32x10 (best seed)": {
+    "accuracy": 0.9947,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 7,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 17,
+        "r2": 0.986
+      },
+      "2nd0_prev": {
+        "neuron": 31,
+        "r2": 0.963
+      },
+      "max-2nd": {
+        "neuron": 5,
+        "r2": 0.216
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 12,
+        "r2": 0.998
+      },
+      "max0-x_t": {
+        "neuron": 6,
+        "r2": 0.835
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 7,
+        "agreement": 0.999
+      },
+      "new_top2_pos": {
+        "neuron": 16,
+        "agreement": 0.998
+      }
+    },
+    "reset_share_of_detector": 0.465,
+    "neuron_with_largest_W_hh_share": 7,
+    "largest_W_hh_share": 0.465,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 7,
+      "weight": -65.12,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      11,
+      20,
+      27,
+      30
+    ],
+    "state_r2_median": 0.935,
+    "state_r2_frac_ge_0.9": 0.656
+  },
+  "32x10 seed 1": {
+    "accuracy": 0.9935,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 22,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 12,
+        "r2": 0.917
+      },
+      "2nd0_prev": {
+        "neuron": 12,
+        "r2": 0.713
+      },
+      "max-2nd": {
+        "neuron": 22,
+        "r2": 0.13
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 6,
+        "r2": 0.997
+      },
+      "max0-x_t": {
+        "neuron": 8,
+        "r2": 0.826
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 22,
+        "agreement": 0.999
+      },
+      "new_top2_pos": {
+        "neuron": 31,
+        "agreement": 0.998
+      }
+    },
+    "reset_share_of_detector": 0.27,
+    "neuron_with_largest_W_hh_share": 22,
+    "largest_W_hh_share": 0.27,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 22,
+      "weight": -71.16,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      11,
+      14,
+      16,
+      23,
+      28,
+      29
+    ],
+    "state_r2_median": 0.931,
+    "state_r2_frac_ge_0.9": 0.656
+  },
+  "32x10 seed 2": {
+    "accuracy": 0.9917,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 8,
+        "r2": 0.999
+      },
+      "max0_prev": {
+        "neuron": 19,
+        "r2": 0.924
+      },
+      "2nd0_prev": {
+        "neuron": 19,
+        "r2": 0.669
+      },
+      "max-2nd": {
+        "neuron": 6,
+        "r2": 0.215
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 17,
+        "r2": 0.953
+      },
+      "max0-x_t": {
+        "neuron": 9,
+        "r2": 0.967
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 8,
+        "agreement": 0.996
+      },
+      "new_top2_pos": {
+        "neuron": 13,
+        "agreement": 0.991
+      }
+    },
+    "reset_share_of_detector": 0.144,
+    "neuron_with_largest_W_hh_share": 8,
+    "largest_W_hh_share": 0.144,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 8,
+      "weight": -22.14,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      5,
+      6,
+      12,
+      24
+    ],
+    "state_r2_median": 0.952,
+    "state_r2_frac_ge_0.9": 0.719
+  },
+  "32x10 seed 3": {
+    "accuracy": 0.9925,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 8,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 7,
+        "r2": 0.935
+      },
+      "2nd0_prev": {
+        "neuron": 7,
+        "r2": 0.668
+      },
+      "max-2nd": {
+        "neuron": 30,
+        "r2": 0.173
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 0,
+        "r2": 0.964
+      },
+      "max0-x_t": {
+        "neuron": 26,
+        "r2": 0.879
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 8,
+        "agreement": 0.999
+      },
+      "new_top2_pos": {
+        "neuron": 17,
+        "agreement": 0.997
+      }
+    },
+    "reset_share_of_detector": 0.316,
+    "neuron_with_largest_W_hh_share": 8,
+    "largest_W_hh_share": 0.316,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 8,
+      "weight": -63.32,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      2,
+      4,
+      11,
+      20,
+      27
+    ],
+    "state_r2_median": 0.937,
+    "state_r2_frac_ge_0.9": 0.812
+  },
+  "32x10 seed 4": {
+    "accuracy": 0.9913,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 9,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 3,
+        "r2": 0.999
+      },
+      "2nd0_prev": {
+        "neuron": 3,
+        "r2": 0.464
+      },
+      "max-2nd": {
+        "neuron": 7,
+        "r2": 0.231
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 29,
+        "r2": 0.997
+      },
+      "max0-x_t": {
+        "neuron": 4,
+        "r2": 1.0
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 9,
+        "agreement": 0.999
+      },
+      "new_top2_pos": {
+        "neuron": 0,
+        "agreement": 0.901
+      }
+    },
+    "reset_share_of_detector": 0.372,
+    "neuron_with_largest_W_hh_share": 9,
+    "largest_W_hh_share": 0.372,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 9,
+      "weight": -53.72,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      8,
+      11,
+      14,
+      20,
+      21,
+      23,
+      24,
+      25
+    ],
+    "state_r2_median": 0.919,
+    "state_r2_frac_ge_0.9": 0.562
+  },
+  "16x10 (best seed)": {
+    "accuracy": 0.9486,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 15,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 7,
+        "r2": 0.796
+      },
+      "2nd0_prev": {
+        "neuron": 7,
+        "r2": 0.585
+      },
+      "max-2nd": {
+        "neuron": 12,
+        "r2": 0.231
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 3,
+        "r2": 0.558
+      },
+      "max0-x_t": {
+        "neuron": 6,
+        "r2": 0.531
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 15,
+        "agreement": 0.998
+      },
+      "new_top2_pos": {
+        "neuron": 10,
+        "agreement": 0.949
+      }
+    },
+    "reset_share_of_detector": 0.636,
+    "neuron_with_largest_W_hh_share": 15,
+    "largest_W_hh_share": 0.636,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 15,
+      "weight": -37.6,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [
+      11
+    ],
+    "state_r2_median": 0.963,
+    "state_r2_frac_ge_0.9": 0.875
+  },
+  "example 16x10": {
+    "accuracy": 0.9535,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 4,
+        "r2": 0.994
+      },
+      "max0_prev": {
+        "neuron": 2,
+        "r2": 0.974
+      },
+      "2nd0_prev": {
+        "neuron": 2,
+        "r2": 0.466
+      },
+      "max-2nd": {
+        "neuron": 11,
+        "r2": 0.124
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 8,
+        "r2": 0.886
+      },
+      "max0-x_t": {
+        "neuron": 7,
+        "r2": 0.986
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 4,
+        "agreement": 0.99
+      },
+      "new_top2_pos": {
+        "neuron": 4,
+        "agreement": 0.872
+      }
+    },
+    "reset_share_of_detector": 0.168,
+    "neuron_with_largest_W_hh_share": 4,
+    "largest_W_hh_share": 0.168,
+    "largest_readout_weight": {
+      "logit": 3,
+      "neuron": 7,
+      "weight": 7.33,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [],
+    "state_r2_median": 0.969,
+    "state_r2_frac_ge_0.9": 0.938
+  },
+  "handcrafted 10": {
+    "accuracy": 0.9902,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 19,
+        "r2": 1.0
+      },
+      "max0_prev": {
+        "neuron": 20,
+        "r2": 1.0
+      },
+      "2nd0_prev": {
+        "neuron": 20,
+        "r2": 0.443
+      },
+      "max-2nd": {
+        "neuron": 19,
+        "r2": 0.13
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 18,
+        "r2": 0.788
+      },
+      "max0-x_t": {
+        "neuron": 21,
+        "r2": 1.0
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 19,
+        "agreement": 1.0
+      },
+      "new_top2_pos": {
+        "neuron": 19,
+        "agreement": 0.863
+      }
+    },
+    "reset_share_of_detector": 0.229,
+    "neuron_with_largest_W_hh_share": 20,
+    "largest_W_hh_share": 0.25,
+    "largest_readout_weight": {
+      "logit": 0,
+      "neuron": 10,
+      "weight": 2.0,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [
+      0
+    ],
+    "state_r2_median": 1.0,
+    "state_r2_frac_ge_0.9": 0.591
+  },
+  "8x10 (best seed)": {
+    "accuracy": 0.4264,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 5,
+        "r2": 0.137
+      },
+      "max0_prev": {
+        "neuron": 2,
+        "r2": 0.469
+      },
+      "2nd0_prev": {
+        "neuron": 2,
+        "r2": 0.452
+      },
+      "max-2nd": {
+        "neuron": 5,
+        "r2": 0.014
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 5,
+        "r2": 0.912
+      },
+      "max0-x_t": {
+        "neuron": 5,
+        "r2": 0.872
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 3,
+        "agreement": 0.392
+      },
+      "new_top2_pos": {
+        "neuron": 7,
+        "agreement": 0.405
+      }
+    },
+    "reset_share_of_detector": 0.101,
+    "neuron_with_largest_W_hh_share": 5,
+    "largest_W_hh_share": 0.177,
+    "largest_readout_weight": {
+      "logit": 9,
+      "neuron": 5,
+      "weight": -5.53,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [],
+    "state_r2_median": 0.76,
+    "state_r2_frac_ge_0.9": 0.125
+  },
+  "8x6 (best seed)": {
+    "accuracy": 0.7886,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 7,
+        "r2": 0.996
+      },
+      "max0_prev": {
+        "neuron": 0,
+        "r2": 0.951
+      },
+      "2nd0_prev": {
+        "neuron": 0,
+        "r2": 0.319
+      },
+      "max-2nd": {
+        "neuron": 7,
+        "r2": 0.143
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 4,
+        "r2": 0.752
+      },
+      "max0-x_t": {
+        "neuron": 4,
+        "r2": 0.956
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 7,
+        "agreement": 0.988
+      },
+      "new_top2_pos": {
+        "neuron": 7,
+        "agreement": 0.847
+      }
+    },
+    "reset_share_of_detector": 0.213,
+    "neuron_with_largest_W_hh_share": 7,
+    "largest_W_hh_share": 0.213,
+    "largest_readout_weight": {
+      "logit": 5,
+      "neuron": 7,
+      "weight": -3.57,
+      "is_detector_on_last": true
+    },
+    "clock_neurons": [],
+    "state_r2_median": 0.948,
+    "state_r2_frac_ge_0.9": 1.0
+  },
+  "8x5 (best seed)": {
+    "accuracy": 0.8816,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 7,
+        "r2": 0.987
+      },
+      "max0_prev": {
+        "neuron": 6,
+        "r2": 0.749
+      },
+      "2nd0_prev": {
+        "neuron": 6,
+        "r2": 0.189
+      },
+      "max-2nd": {
+        "neuron": 7,
+        "r2": 0.132
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 1,
+        "r2": 0.713
+      },
+      "max0-x_t": {
+        "neuron": 5,
+        "r2": 0.85
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 7,
+        "agreement": 0.97
+      },
+      "new_top2_pos": {
+        "neuron": 7,
+        "agreement": 0.863
+      }
+    },
+    "reset_share_of_detector": 0.244,
+    "neuron_with_largest_W_hh_share": 7,
+    "largest_W_hh_share": 0.244,
+    "largest_readout_weight": {
+      "logit": 2,
+      "neuron": 3,
+      "weight": 4.8,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [
+      2
+    ],
+    "state_r2_median": 0.965,
+    "state_r2_frac_ge_0.9": 0.875
+  },
+  "8x4 (best seed)": {
+    "accuracy": 0.988,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 7,
+        "r2": 0.489
+      },
+      "max0_prev": {
+        "neuron": 6,
+        "r2": 0.357
+      },
+      "2nd0_prev": {
+        "neuron": 2,
+        "r2": 0.076
+      },
+      "max-2nd": {
+        "neuron": 2,
+        "r2": 0.105
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 2,
+        "r2": 0.724
+      },
+      "max0-x_t": {
+        "neuron": 2,
+        "r2": 0.934
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 5,
+        "agreement": 0.85
+      },
+      "new_top2_pos": {
+        "neuron": 5,
+        "agreement": 0.794
+      }
+    },
+    "reset_share_of_detector": 0.278,
+    "neuron_with_largest_W_hh_share": 7,
+    "largest_W_hh_share": 0.278,
+    "largest_readout_weight": {
+      "logit": 1,
+      "neuron": 4,
+      "weight": 7.51,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [],
+    "state_r2_median": 0.84,
+    "state_r2_frac_ge_0.9": 0.5
+  },
+  "4x3 (best seed)": {
+    "accuracy": 0.9848,
+    "features": {
+      "max0-max0_prev": {
+        "neuron": 1,
+        "r2": 0.697
+      },
+      "max0_prev": {
+        "neuron": 3,
+        "r2": 0.297
+      },
+      "2nd0_prev": {
+        "neuron": 2,
+        "r2": 0.056
+      },
+      "max-2nd": {
+        "neuron": 3,
+        "r2": 0.148
+      },
+      "relu(2nd0_prev-x_t)": {
+        "neuron": 2,
+        "r2": 0.585
+      },
+      "max0-x_t": {
+        "neuron": 2,
+        "r2": 0.782
+      }
+    },
+    "events": {
+      "new_max_pos": {
+        "neuron": 1,
+        "agreement": 0.844
+      },
+      "new_top2_pos": {
+        "neuron": 1,
+        "agreement": 0.804
+      }
+    },
+    "reset_share_of_detector": 0.286,
+    "neuron_with_largest_W_hh_share": 1,
+    "largest_W_hh_share": 0.286,
+    "largest_readout_weight": {
+      "logit": 1,
+      "neuron": 0,
+      "weight": -18.75,
+      "is_detector_on_last": false
+    },
+    "clock_neurons": [],
+    "state_r2_median": 0.93,
+    "state_r2_frac_ge_0.9": 0.75
+  }
+}

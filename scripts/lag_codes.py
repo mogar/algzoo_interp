@@ -26,33 +26,9 @@ import torch as th
 from algzoo_interp import randn_inputs, run_with_cache
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.plots import heatmap, savefig
-from algzoo_interp.state import ideal_state
+from algzoo_interp.state import ideal_state, p_on_by_lag
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
-
-
-def p_on_by_lag(cache, lag, min_count):
-    """P(on | lag = k) pooled over steps, and the max spread across steps: two [hidden, T]."""
-    mask = cache.mask.cpu()
-    batch, T, H = mask.shape
-    per_t = th.full((T, T, H), float("nan"))  # [t, k, neuron]
-    pooled_on = th.zeros(T, H)
-    pooled_n = th.zeros(T)
-    for t in range(1, T):
-        for k in range(t + 1):
-            sel = lag[:, t] == k
-            n = int(sel.sum())
-            if n < min_count:
-                continue
-            on = mask[sel, t].float()
-            per_t[t, k] = on.mean(0)
-            pooled_on[k] += on.sum(0)
-            pooled_n[k] += n
-    pooled = (pooled_on / pooled_n.clamp(min=1)[:, None]).T
-    pooled[:, pooled_n == 0] = float("nan")
-    spread = (per_t.nan_to_num(nan=-1).amax(0) - per_t.nan_to_num(nan=2).amin(0)).T
-    spread[spread < 0] = float("nan")
-    return pooled, spread
 
 
 def coefs_by_lag(cache, state, min_count, t=None):

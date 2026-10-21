@@ -353,6 +353,62 @@ the neuron's value explained by the ideal state plus current input
 | 8 | always on; carries the max more at larger lags | unclear | 0.08 | 0.88 |
 | 4, 9, 14 | unexplained; ablation costs ≤ 2% | — | ≤ 0.02 | 0.66-0.83 |
 
+## E. Generality: other seeds and model sizes (roadmap step 4)
+
+Sources: `results/compare/compare.md` (`python scripts/compare_models.py`,
+13 models) and `results/compare/causal.md` (`python scripts/causal_tests.py`
+on each 32x10 seed with its own neuron numbers, then
+`python scripts/summarize_causal.py`). Neuron numbers differ between models,
+so roles were matched by behaviour, not index.
+
+**Universal across all five 32x10 seeds** (and the zoo's 16x10):
+
+- **An exact new-max detector** (H1). Every seed has one neuron whose value
+  is `max0 − max0_prev` (R² 1.00) and whose on/off agrees with "new positive
+  max" on ≥ 99.6% of inputs. So does the zoo 16x10 model (99.8%).
+- **The detector vetoes the last position** (H6). In every seed and in the
+  zoo 16x10, the largest readout weight is detector → last logit (−22 to
+  −71). Removing it drops accuracy on inputs whose max is last from 0.99 to
+  0.67-0.72 (seed 2: 0.03). Causal in all five seeds.
+- **A "below the 2nd max" neuron that vetoes the last position** (H6b).
+  Every seed has a neuron matching `relu(2nd0_prev − x_t)` with R² ≥ 0.95.
+  Removing its weight to the last logit causes wrong "last position" answers
+  (72-100% of new errors) in every seed, and costs from 1% (seed 3) to 76%
+  (seed 1) accuracy.
+- **Resets from the detector** (H5). The detector has the largest outgoing
+  recurrent weight share in every seed (14-47%), and its strong targets are
+  zero after it fires (P ≥ 0.98). How much accuracy depends on them varies:
+  cutting them costs 0% (seed 2) to 35% (seed 4).
+- **A lag clock** (H4). Every seed has 4-8 neurons that are always on at some
+  lag ≥ 2 of the max and always off at another.
+- **Minimal-state encoding** (H4). Median state R² 0.92-0.95 in every seed.
+
+**Seed-specific:**
+
+- **How exclusively the detector carries a new max.** Patching everything
+  *except* the detector transfers the effect of a new max 3% of the time in
+  seed 0 (so the detector is necessary there) but 16-67% in seeds 1-4, where
+  other neurons also carry it.
+- **The top-2 detector** (H2): ≥ 99% event agreement in seeds 0-3, 90% in
+  seed 4; patched alone it transfers 86% (seed 0) down to 0% (seed 4).
+- **A single running-2nd-max neuron** exists only in seed 0 (R² 0.96; other
+  seeds 0.46-0.71). A single running-max neuron exists in all (0.92-1.00),
+  but how much of the max's value it carries alone varies (38-78%).
+
+**Other sizes:**
+
+- **16x10 has two solution types.** The zoo's best 16x10 seed looks like
+  32x10 (detector, veto −37.6, 64% reset share, a clock neuron). The blog's
+  16x10 model looks like the handcrafted model: no detector veto, no clock,
+  low reset share (0.17), and a near-exact `max0 − x_t` neuron (R² 0.99, as
+  handcrafted neuron 21).
+- **The failing 8x10 model (43%) lacks the mechanism**: no event detector
+  (best agreement 0.39), no veto, and state R² only 0.76.
+- **8x6 (79%) and 8x5 (88%)** have the detector (≥ 97%) but no clock (0-1
+  clock neurons); there aren't enough neurons for both.
+- **8x4 and 4x3 (≥ 98.5%)** reach high accuracy with only a weak detector
+  (≤ 85%): short sequences don't need this machinery.
+
 ## Testing
 
 The order in which these hypotheses get tested, alongside the rest of the
