@@ -79,20 +79,47 @@ docs/            this plan and other notes
 
 ### Phase 1: Tools
 
-1. **Hooked RNN.** Unroll by hand and expose, for each step t,
-   pre-activations, `h_t`, ReLU masks and the final logits. Test that it
-   matches `model(x)` exactly.
-2. **Datasets.** `randn` inputs matching training, plus controlled probes:
-   fixed (argmax, 2nd-argmax) positions, a chosen top-two gap, near-ties,
-   sorted and reverse-sorted sequences, and one position changed at a time.
-3. **Evaluation.** Accuracy overall, by (argmax position, 2nd-argmax
-   position), and as a function of the top-two gap.
-4. **Interventions.** Zero, mean and resample ablation of neurons, at single
-   steps or all steps. Activation patching between paired inputs. Path
-   patching through time.
-5. **Activation-pattern analysis.** Count which on/off patterns occur, how
-   much input probability the most common ones cover, and extract the exact
-   linear map for each.
+- [x] **Hooked RNN** (`hooked.py`). Unroll by hand and expose, for each step
+      t, pre-activations, `h_t`, ReLU masks and the final logits, with
+      optional hooks on `pre` and `h`. Also per-neuron logit contributions.
+      Tested to match `model(x)` exactly.
+- [x] **Datasets** (`data.py`). `randn` inputs matching training, plus
+      controlled probes: fixed (argmax, 2nd-argmax) positions, a chosen
+      top-two gap (near-ties), sorted sequences, and one position swept.
+- [x] **Evaluation** (`eval.py`). Accuracy overall, by (argmax position,
+      2nd-argmax position), and by top-two gap.
+- [x] **Interventions** (`interventions.py`). Zero, mean and resample
+      ablation of any neurons at any steps; activation patching from a
+      source input.
+- [ ] Path patching through time (patching only one route of influence).
+      Deferred until a concrete hypothesis needs it.
+- [x] **Activation-pattern analysis** (`patterns.py`). Count patterns and
+      their coverage, and extract the exact linear map for any pattern
+      (tested to reproduce the logits exactly).
+- [x] **`scripts/inspect_model.py`**: first-look figures for any model
+      (weights, accuracy breakdowns, activity, pattern coverage, single-neuron
+      ablations, example traces) in `results/<model>/inspect/`.
+
+First observations (2^18 randn inputs):
+
+| Model | Accuracy | Distinct patterns | Patterns covering 90% |
+|---|---|---|---|
+| 4x3 | 98.4% | 67 | 13 |
+| handcrafted 10 | 99.0% | 65,851 | 39,637 |
+| example 16x10 | 95.3% | 174,722 | 148,508 |
+| 32x10 | 99.5% | 257,562 | 231,348 |
+
+- Listing whole-sequence activation patterns is practical only for the small
+  models. For 10-step models nearly every input has its own pattern, even for
+  the handcrafted model. There we need per-step or per-neuron descriptions,
+  not region-by-region ones.
+- 4x3: the neurons form two sign-flipped pairs, (0, 3) and (1, 2), and the
+  active pair alternates between steps.
+- 32x10: `W_hh` is mostly near zero apart from strong negative columns from
+  neurons 7 and 16, which inhibit many other neurons. Neuron 7 also has the
+  largest input weight and a large negative weight on logit 9. Ablating 7,
+  16 or 17 costs 60-90% accuracy. Ablating 9 or 10 costs almost nothing, and
+  ablating 4, 14 or 24 costs little.
 
 ### Phase 2: Model ladder
 

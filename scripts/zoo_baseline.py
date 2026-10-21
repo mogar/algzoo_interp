@@ -12,6 +12,7 @@ import numpy as np
 import torch as th
 
 from algzoo_interp import ZOO_2ND_ARGMAX_GRID, accuracy, load_2nd_argmax, randn_inputs
+from algzoo_interp.plots import heatmap, savefig
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "zoo_baseline"
 
@@ -39,27 +40,18 @@ def main():
         writer.writerow(["hidden_size", "seq_len", "n_params", "accuracy"])
         writer.writerows(rows)
 
-    hidden_sizes = sorted({r[0] for r in rows})
+    # Largest hidden size in the top row
+    hidden_sizes = sorted({r[0] for r in rows}, reverse=True)
     seq_lens = sorted({r[1] for r in rows})
     grid = np.full((len(hidden_sizes), len(seq_lens)), np.nan)
     for hidden_size, seq_len, _, acc in rows:
         grid[hidden_sizes.index(hidden_size), seq_lens.index(seq_len)] = acc
 
     fig, ax = plt.subplots(figsize=(7, 6))
-    im = ax.imshow(grid, origin="lower", cmap="viridis", vmin=0, vmax=1)
-    for i in range(len(hidden_sizes)):
-        for j in range(len(seq_lens)):
-            ax.text(j, i, f"{grid[i, j]:.1%}", ha="center", va="center",
-                    color="white" if grid[i, j] < 0.6 else "black", fontsize=8)
-    ax.set_xticks(range(len(seq_lens)), seq_lens)
-    ax.set_yticks(range(len(hidden_sizes)), hidden_sizes)
-    ax.set_xlabel("seq_len")
-    ax.set_ylabel("hidden_size")
-    ax.set_title(f"2nd argmax zoo accuracy (n={args.n:,} randn inputs)")
-    fig.colorbar(im, ax=ax, label="accuracy")
-    fig.tight_layout()
-    fig.savefig(OUT_DIR / "accuracy.png", dpi=150)
-    print(f"Saved results to {OUT_DIR}")
+    heatmap(ax, grid, title=f"2nd argmax zoo accuracy (n={args.n:,} randn inputs)",
+            xlabel="seq_len", ylabel="hidden_size", xticks=seq_lens, yticks=hidden_sizes,
+            vmin=0, vmax=1, annotate=True, fmt="{:.1%}")
+    savefig(fig, OUT_DIR / "accuracy.png")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,39 @@
+{
+  "model": "2nd_argmax_4x3",
+  "hidden_size": 4,
+  "seq_len": 3,
+  "n_params": 32,
+  "n_inputs": 262144,
+  "accuracy": 0.9844818115234375,
+  "worst_top2_positions": {
+    "argmax_pos": 1,
+    "second_pos": 2,
+    "accuracy": 0.9788739085197449
+  },
+  "dead": [],
+  "always_on": [],
+  "n_patterns": 67,
+  "n_patterns_last_step": 14,
+  "patterns_for_90pct": 13,
+  "patterns_for_99pct": 25,
+  "single_neuron_ablation_accuracy": {
+    "zero": [
+      0.32720947265625,
+      0.374481201171875,
+      0.375457763671875,
+      0.332244873046875
+    ],
+    "mean": [
+      0.2493896484375,
+      0.295623779296875,
+      0.301177978515625,
+      0.25189208984375
+    ],
+    "resample": [
+      0.32891845703125,
+      0.348968505859375,
+      0.353546142578125,
+      0.334259033203125
+    ]
+  }
+}
