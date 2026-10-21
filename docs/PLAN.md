@@ -349,15 +349,39 @@ don't.
 
 ### Step 6: Quantitative explanation of 32x10
 
-- [ ] Hand-built rebuild from the step 2-3 explanation; target ≥ 99% argmax
-      agreement with the real model.
-- [ ] Resample check over everything the explanation calls irrelevant.
-- [ ] Mechanistic accuracy estimate, including where errors fall (the worst
-      cell is argmax 8 / 2nd argmax 9, 98.5%).
-- [ ] Write-up in `results/2nd_argmax_32x10/README.md`.
+- [x] Rebuild from the step 2-3 explanation (`scripts/explain_32x10.py`):
+      a surrogate final state built from the ideal state, run through the
+      model's readout.
+- [x] Resample check over everything the explanation calls irrelevant.
+- [~] Mechanistic accuracy estimate: errors attributed to mechanisms; no
+      sampling-free estimate.
+- [x] Write-up in [`results/2nd_argmax_32x10/README.md`](../results/2nd_argmax_32x10/README.md).
 
 **Done when** all four explanation checks pass, with the unexplained gap
-stated as a number.
+stated as a number. **Two pass, one is partial, plus the write-up:**
+
+- **Rebuild: pass, for correct behaviour.** A surrogate final state built from
+  the *positions* of the max and 2nd max alone agrees with the model on
+  99.44% of fresh inputs: exactly the inputs the model gets right (the
+  surrogate is 100% accurate). The unexplained gap is the model's 0.56% of
+  errors.
+- **Resample check: pass.** Resampling every input except the max, 2nd max
+  and last leaves 99.17% of predictions unchanged (99.61% where the model was
+  right). Keeping only the top-2 positions: 98.92%. Both are at the
+  (accuracy)² = 98.88% ceiling expected if errors are independent near-ties.
+- **Accuracy estimate: partial.** 80% of errors fall in 7% of inputs singled
+  out by two mechanisms: the max(0, …) convention can't rank negative values
+  (2nd largest negative: 1.08% of inputs, 21.6% error, 42% of errors), and
+  comparisons have finite resolution (2nd and 3rd within 3%: 5.8% of inputs,
+  3.7% error, 38% of errors). A one-neuron error model from the top-2
+  detector's biased threshold over-predicts its error type tenfold (8,858
+  vs 833), so near-ties are resolved jointly by several neurons. No
+  sampling-free estimate yet.
+
+**Still open** (see the write-up's "What isn't explained"): how each of
+logits 0-8 combines the clock, delay-line and reference neurons; the lag code
+for the 2nd max; patching the clock; and a joint model of near-tie
+resolution for a sampling-free accuracy estimate.
 
 ### Step 7: Optional interactive viewer
 
@@ -374,9 +398,12 @@ through hidden states for chosen inputs, or to explore cones of small models.
 
 ## Milestones
 
-1. ~~The hooked RNN matches the model exactly~~ (done), and the tools recover
-   the handcrafted 10-step model's neurons (step 1).
-2. Causal neuron dictionary for 32x10 (steps 2-3).
-3. Roles compared across seeds, 16x10 and smaller models (step 4).
-4. A small model passes all four explanation checks (step 5).
-5. 32x10 passes all four explanation checks (step 6).
+1. ~~The hooked RNN matches the model exactly, and the tools recover the
+   handcrafted 10-step model's neurons~~ (step 1, done).
+2. ~~Causal neuron dictionary for 32x10~~ (steps 2-3, done; clock roles
+   correlational).
+3. ~~Roles compared across seeds, 16x10 and smaller models~~ (step 4, done).
+4. A small model passes all four explanation checks (step 5: 4x3 passes
+   three; the compact rebuild reaches 98.8%, just short of 99%).
+5. 32x10 passes all four explanation checks (step 6: rebuild and resample
+   pass; accuracy estimate partial).

@@ -409,6 +409,28 @@ so roles were matched by behaviour, not index.
 - **8x4 and 4x3 (≥ 98.5%)** reach high accuracy with only a weak detector
   (≤ 85%): short sequences don't need this machinery.
 
+## F. Errors and the quantitative checks (roadmap step 6)
+
+Full write-up: [results/2nd_argmax_32x10/README.md](../results/2nd_argmax_32x10/README.md);
+numbers from `python scripts/explain_32x10.py --hidden 32 --seq-len 10`.
+
+- **The minimal-state explanation covers all correct behaviour.** A
+  surrogate final state built from the positions of the max and 2nd max
+  agrees with the model on 99.44% of fresh inputs: exactly those the model
+  gets right.
+- **H8 (new). Errors come from two mechanisms.**
+  - **The max(0, …) blind spot.** When the 2nd largest input is negative
+    (1.08% of inputs), the error rate is 21.6%, causing 42% of all errors.
+    Comparing against running values clipped at 0 can't rank negative values.
+  - **Finite comparison resolution.** When the 2nd and 3rd largest are within
+    3% of each other (5.8% of inputs), the error rate is 3.7%, causing 38% of
+    errors. 66% of all errors predict the 3rd largest.
+
+  *Status: correlational, strong.* The new-top-2 detector has a biased
+  threshold: it fires up to about 1% below the running 2nd max. But it alone
+  doesn't produce the errors: predicting them from its bias gives 8,858
+  against 833 measured. Near-ties are resolved jointly by several neurons.
+
 ## Testing
 
 The order in which these hypotheses get tested, alongside the rest of the
