@@ -7,7 +7,7 @@ from .data import (
 )
 from .eval import accuracy, accuracy_by_top2_gap, accuracy_by_top2_positions, predict
 from .hooked import RNNCache, get_weights, logit_contributions, run_with_cache
-from .interventions import ablate, patch, replace_h
+from .interventions import ablate, ablate_edges, patch, replace_h
 from .loading import (
     ZOO_2ND_ARGMAX_GRID,
     load_2nd_argmax,

@@ -5,6 +5,7 @@ from alg_zoo.tasks import task_2nd_argmax
 
 from algzoo_interp import (
     ablate,
+    ablate_edges,
     accuracy,
     accuracy_by_top2_gap,
     accuracy_by_top2_positions,
@@ -137,3 +138,13 @@ def test_accuracy_breakdowns_consistent(model, x):
     acc_gap, counts_gap = accuracy_by_top2_gap(model, x, edges)
     assert counts_gap.sum() == len(x)
     assert ((acc_gap * counts_gap).sum() / len(x)).item() == pytest.approx(accuracy(model, x))
+
+
+def test_ablate_edges(model, x):
+    edited = ablate_edges(model, hh=[(3, 7)], out=[(9, 7)])
+    assert edited.rnn.weight_hh_l0[3, 7] == 0 and edited.linear.weight[9, 7] == 0
+    assert model.rnn.weight_hh_l0[3, 7] != 0, "original model must be untouched"
+    # Removing a readout edge changes logit 9 by exactly that edge's contribution
+    clean = run_with_cache(model, x)
+    cut = run_with_cache(ablate_edges(model, out=[(9, 7)]), x)
+    th.testing.assert_close(clean.logits[:, 9] - cut.logits[:, 9], model.linear.weight[9, 7] * clean.h[:, -1, 7])

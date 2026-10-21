@@ -4,6 +4,8 @@ Interventions replace h_t after the ReLU, so their effects propagate through
 all later steps. neurons and steps select what is replaced; None means all.
 """
 
+import copy
+
 import torch as th
 
 from .hooked import RNNCache, run_with_cache
@@ -68,3 +70,21 @@ def ablate(model, x, neurons=None, steps=None, mode="zero", ref_x=None, seed=0):
 def patch(model, x, x_src, neurons=None, steps=None) -> RNNCache:
     """Run on x, patching in h values from the run on x_src (same shape as x)."""
     return replace_h(model, x, run_with_cache(model, x_src).h, neurons=neurons, steps=steps)
+
+
+def ablate_edges(model, hh=(), out=(), ih=()):
+    """Copy of model with individual weights set to zero (edge ablation).
+
+    hh: (to, from) pairs in W_hh; out: (logit, neuron) pairs in W_out;
+    ih: neuron indices in W_ih. Removes one route of influence while leaving
+    the neurons themselves in place.
+    """
+    edited = copy.deepcopy(model)
+    with th.no_grad():
+        for to, frm in hh:
+            edited.rnn.weight_hh_l0[to, frm] = 0
+        for logit, neuron in out:
+            edited.linear.weight[logit, neuron] = 0
+        for neuron in ih:
+            edited.rnn.weight_ih_l0[neuron, 0] = 0
+    return edited

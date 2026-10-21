@@ -77,6 +77,8 @@ def running_values(x):
     max0 = top1.clamp(min=0)
     max0_prev = lagged(max0, 1)
     second = th.where(th.isinf(top2), th.zeros_like(top2), top2)
+    # max(0, 2nd largest of x_0..x_{t-1}); 0 while fewer than two inputs seen
+    second0_prev = lagged(second.clamp(min=0), 1)
     ev = events(x)
     out = {}
     for k in range(seq_len):
@@ -91,6 +93,9 @@ def running_values(x):
             "max0": max0,
             "max0_prev": max0_prev,
             "max0-max0_prev": max0 - max0_prev,
+            "2nd0_prev": second0_prev,
+            # how far x_t falls below the running 2nd max (32x10 neuron 12)
+            "relu(2nd0_prev-x_t)": (second0_prev - x).clamp(min=0),
             "steps_since_new_max_pos": steps_since(ev["new_max_pos"]),
             "steps_since_new_top2_pos": steps_since(ev["new_top2_pos"]),
         }

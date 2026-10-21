@@ -202,22 +202,38 @@ zero (see step 3).
 
 ### Step 2: Causal tests of the 32x10 event detectors, resets and veto (H1, H2, H5, H6)
 
-- [ ] Tool: **edge ablation**. Run the model with chosen individual weights
-      zeroed (or their contribution removed) without touching the rest.
-      Covers the "path patching" item deferred from Phase 1 for the cases we
-      need.
-- [ ] **H1/H2.** Patch neuron 7 (or 16) at a single step, from an input where
-      the event did or didn't happen. Measure how the prediction changes and
-      which neurons respond at the next step.
-- [ ] **H5 resets.** Measure target neurons (29, 13, 0, ... for 7; 3, 25 for
-      16) at t+1, conditioned on the source firing at t; then patch the source
-      and check the targets are forced to zero.
-- [ ] **H6 veto.** Remove the 7 → logit 9 contribution only and re-measure
-      accuracy split by argmax position. Prediction: errors appear mainly when
-      the max is at position 9. Same for 12 → logit 9 to find its role.
+- [x] Tool: **edge ablation** (`ablate_edges` in `interventions.py`): a copy
+      of the model with chosen individual weights zeroed. Covers the "path
+      patching" item deferred from Phase 1 for the cases we need.
+- [x] **H1/H2.** Single-step patching between input pairs that differ only at
+      step t (`scripts/causal_tests.py`).
+- [x] **H5 resets.** Target neurons at t+1 conditioned on the source firing
+      at t, and with the reset edges removed.
+- [x] **H6 veto.** Removed 7 → logit 9 and 12 → logit 9, and measured
+      accuracy by argmax position and the rank of x_9 in the new errors.
 
 **Done when** each of H1, H2, H5, H6 is marked causal or refuted in
-HYPOTHESES.md, with the script and numbers cited.
+HYPOTHESES.md, with the script and numbers cited. **Done:** all four are
+causal. Results in `results/2nd_argmax_32x10/causal/`:
+
+- **H1:** with everything except neuron 7 patched, a new max at step t
+  changes the prediction only 1-5% of the time (t=2..8); neuron 7 is
+  necessary. Neurons 7 + 16 together carry 99% of the effect at t=2, less at
+  later steps.
+- **H2:** neuron 16 alone carries 74-93% of the effect of a new top-2 value;
+  everything except 7 and 16, 1-6%.
+- **H5:** every reset target is zero at t+1 98-100% of the time after its
+  source fires. Cutting the edges shows 7 causes the resets of 0, 13, 28, 29;
+  targets 3, 10, 25 are also zeroed by something else. Cutting 7's or 16's
+  reset edges drops accuracy to 67% / 72%.
+- **H6:** cutting 7 → logit 9 drops accuracy at "max at position 9" from 99%
+  to 72%, and nowhere else.
+- **New, H6b:** neuron 12 = `relu(max(0, running 2nd max) - x_t)` (R² 0.998)
+  vetoes position 9 when x_9 is too *small*. Cutting it causes wrong "9"
+  answers where x_9 is mostly the 3rd largest. Logit 9 is bracketed by two
+  vetoes.
+- **New feature** `2nd0_prev` also identifies neuron 31 as the running 2nd
+  max (R² 0.963).
 
 ### Step 3: Memory and timing neurons in 32x10 (H3, H4)
 

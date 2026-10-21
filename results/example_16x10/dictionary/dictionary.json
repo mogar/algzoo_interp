@@ -20,7 +20,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.64556884765625,
-        "r2_all_features": 0.9303754613306703,
+        "r2_all_features": 0.9303889241403633,
         "r2_handcrafted_basis": 0.9230150417644535
       }
     },
@@ -38,11 +38,11 @@
         "max0_excl(t-3)-x_t",
         "max0_excl(t-6)-x_t"
       ],
-      "multi_r2": 0.9801717468698876,
+      "multi_r2": 0.9801717468698881,
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.778900146484375,
-        "r2_all_features": 0.9959475179845048,
+        "r2_all_features": 0.9959475180826223,
         "r2_handcrafted_basis": 0.9958775300171049
       }
     },
@@ -64,7 +64,7 @@
       "label": "value max0_prev",
       "extra": {
         "ablation_drop": 0.5986328125,
-        "r2_all_features": 0.9969056267853086,
+        "r2_all_features": 0.9969496878644478,
         "r2_handcrafted_basis": 0.9961170641685935
       }
     },
@@ -86,7 +86,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.295867919921875,
-        "r2_all_features": 0.7566357157630718,
+        "r2_all_features": 0.7580175205226494,
         "r2_handcrafted_basis": 0.7535982396249938
       }
     },
@@ -107,7 +107,7 @@
       "label": "event new_max_pos; value max0-max0_prev",
       "extra": {
         "ablation_drop": 0.6375732421875,
-        "r2_all_features": 0.9954573574487843,
+        "r2_all_features": 0.9955117624584967,
         "r2_handcrafted_basis": 0.9952567286347461
       }
     },
@@ -122,14 +122,14 @@
       "value_intercept": -0.3181127693663946,
       "multi_features": [
         "relu(x_{t-1})",
-        "2nd_max_so_far",
-        "relu(x_{t-4})"
+        "2nd0_prev",
+        "max0_prev"
       ],
-      "multi_r2": 0.8777032115068395,
+      "multi_r2": 0.8917901278780835,
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.745880126953125,
-        "r2_all_features": 0.9371462617046649,
+        "r2_all_features": 0.9380603178356428,
         "r2_handcrafted_basis": 0.935373983982082
       }
     },
@@ -151,7 +151,7 @@
       "label": "value max0_excl(t-1)-x_t",
       "extra": {
         "ablation_drop": 0.83001708984375,
-        "r2_all_features": 0.9974796750103304,
+        "r2_all_features": 0.9975052164858961,
         "r2_handcrafted_basis": 0.9973057994634645
       }
     },
@@ -169,11 +169,11 @@
         "steps_since_new_max_pos",
         "max0_excl(t-6)-x_t"
       ],
-      "multi_r2": 0.9935328959968447,
+      "multi_r2": 0.9935328959968445,
       "label": "value max0-x_t",
       "extra": {
         "ablation_drop": 0.824188232421875,
-        "r2_all_features": 0.9993240253984911,
+        "r2_all_features": 0.9993250559542072,
         "r2_handcrafted_basis": 0.9989795531532311
       }
     },
@@ -182,20 +182,20 @@
       "p_active": 0.7054477334022522,
       "best_event": "x_{t-2}>0",
       "event_agreement": 0.5407596230506897,
-      "best_value": "max0_excl(t-1)-x_t",
-      "value_r2": 0.8512105345726013,
-      "value_slope": 10.39807935391629,
-      "value_intercept": -0.38278128036481346,
+      "best_value": "relu(2nd0_prev-x_t)",
+      "value_r2": 0.8857507705688477,
+      "value_slope": 13.029207334219613,
+      "value_intercept": 1.102540693180827,
       "multi_features": [
-        "max0_excl(t-1)-x_t",
-        "max0_excl(t-3)-x_t",
-        "max0_excl(t-7)-x_t"
+        "relu(2nd0_prev-x_t)",
+        "steps_since_new_max_pos",
+        "max0_excl(t-4)-x_t"
       ],
-      "multi_r2": 0.9032325379770196,
+      "multi_r2": 0.938102407537844,
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.818817138671875,
-        "r2_all_features": 0.9958940174236094,
+        "r2_all_features": 0.9959152750398671,
         "r2_handcrafted_basis": 0.9957897038964947
       }
     },
@@ -210,14 +210,14 @@
       "value_intercept": -0.09328620867915483,
       "multi_features": [
         "relu(x_{t-1})",
-        "2nd_max_so_far",
-        "steps_since_new_max_pos"
+        "2nd0_prev",
+        "max0_excl(t-2)-x_t"
       ],
-      "multi_r2": 0.7316878256090195,
+      "multi_r2": 0.7369559898191476,
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.25836181640625,
-        "r2_all_features": 0.8553081368431149,
+        "r2_all_features": 0.8553325575668748,
         "r2_handcrafted_basis": 0.8385081992061814
       }
     },
@@ -239,7 +239,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.60516357421875,
-        "r2_all_features": 0.9531854198604046,
+        "r2_all_features": 0.9576265971515948,
         "r2_handcrafted_basis": 0.950260601818717
       }
     },
@@ -261,7 +261,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.639129638671875,
-        "r2_all_features": 0.9409203014636195,
+        "r2_all_features": 0.9491538835208362,
         "r2_handcrafted_basis": 0.9394674869844939
       }
     },
@@ -283,7 +283,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.683135986328125,
-        "r2_all_features": 0.9198002610098701,
+        "r2_all_features": 0.9208843344899972,
         "r2_handcrafted_basis": 0.9158334262299891
       }
     },
@@ -299,13 +299,13 @@
       "multi_features": [
         "max0_prev",
         "relu(x_{t-4})",
-        "relu(x_{t-8})"
+        "2nd0_prev"
       ],
-      "multi_r2": 0.8214822413089192,
+      "multi_r2": 0.8260780358463334,
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.351348876953125,
-        "r2_all_features": 0.9066649046768116,
+        "r2_all_features": 0.9073595142920724,
         "r2_handcrafted_basis": 0.9051625361023516
       }
     },
@@ -327,7 +327,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.417205810546875,
-        "r2_all_features": 0.9517530292347083,
+        "r2_all_features": 0.9550915379633288,
         "r2_handcrafted_basis": 0.9471583908113365
       }
     },
@@ -349,7 +349,7 @@
       "label": "unexplained",
       "extra": {
         "ablation_drop": 0.425323486328125,
-        "r2_all_features": 0.8868725491616307,
+        "r2_all_features": 0.8868792744934355,
         "r2_handcrafted_basis": 0.88325625245262
       }
     }
