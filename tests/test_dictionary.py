@@ -5,6 +5,7 @@ from alg_zoo import handcrafted_2nd_argmax
 from algzoo_interp import randn_inputs, run_with_cache
 from algzoo_interp.dictionary import ValueFitter, build_dictionary
 from algzoo_interp.features import events, lagged, max0_excluding_lag, running_top2, steps_since
+from algzoo_interp.state import cellwise_r2, ideal_state
 
 
 def test_lagged():
@@ -63,3 +64,16 @@ def test_dictionary_recovers_handcrafted_neurons():
     for n, feature in expected.items():
         assert entries[n].best_value == feature, n
         assert entries[n].value_r2 > 0.999, n
+
+
+def test_ideal_state_and_cellwise_r2():
+    x = th.tensor([[1.0, 3.0, 2.0, 0.5]])
+    st = ideal_state(x)
+    assert st["lag_max"].tolist() == [[0, 0, 1, 2]]
+    assert st["lag_2nd"].tolist() == [[0, 1, 0, 1]]
+    # A target that is exactly affine within each cell is fit perfectly
+    gen = th.Generator().manual_seed(0)
+    cells = th.randint(0, 5, (4096,), generator=gen)
+    f = th.randn(4096, generator=gen)
+    y = (cells.float() * f + cells.float() ** 2)[:, None]
+    assert cellwise_r2(y, cells, [f]).item() == pytest.approx(1.0)

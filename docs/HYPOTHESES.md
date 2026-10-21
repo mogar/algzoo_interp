@@ -122,26 +122,87 @@ candidate features reach 0.93, 0.94 and 0.93.
 x_0..x_{t-1})` identifies neuron 31: R² = 0.963. So the model keeps both a
 running max (17) and a running 2nd max (31).
 
-**Status.** Correlational. Neurons 17 and 31 are strong; 5 and 8 look like
-mixtures of several running values.
+**Update (step 3).** Fitting each neuron separately for each lag of the max
+(`results/2nd_argmax_32x10/lag_codes/coefs_lag_max.png`, from
+`python scripts/lag_codes.py --hidden 32 --seq-len 10`) resolves neurons 1 and
+5: at every lag they are close to a fixed multiple of the **gap** between the
+max and 2nd max (neuron 1 ≈ 4.4·max − 4.1·2nd; neuron 5 ≈ 3·max − 2.7·2nd at
+lags 2-9). Neuron 8 carries the max with a weight that grows with lag (≈ 0.2
+at lag 2-3, ≈ 2 at lags 7-9); its role is still unclear.
 
-### H4. The variable neurons encode *where*, not just *what* (speculative)
+**Causal test (step 3).** Pairs of inputs that differ only in the *value* of
+the running max of `x_0..x_t` (same position, so every running-order event up
+to t is unchanged). Patching at step t, agreement with src at t+1 of neuron
+7's new-max decision, over pairs where it differs (`causal/summary.json`,
+`memory`):
 
-**Claim.** The task asks for the **position** of the 2nd largest value, but
-H1-H3 only track values and events. Something has to remember *when* the
-relevant events happened. The neurons whose activity changes from step to step
-(neither event-like nor always on) may encode time since the last new max or
-new top-2, for example by growing or decaying at a steady rate until reset.
+| patched at step t (t = 2..8) | neuron 7 at t+1 matches src | final prediction matches src |
+|---|---|---|
+| neuron 17 alone | 65% (53% → 72% as t grows) | 58% |
+| value neurons 1, 5, 17, 31 | 80% | 77% |
+| everything except 1, 5, 17, 31 | 20% | 21% |
 
-**Evidence.** Indirect only. The readout has to separate 10 positions, and
-`W_out` spreads moderate weights over many neurons and positions (e.g. neuron
-21 has weights of both signs across positions 4-7: +8.0, −9.8, +12.8, −7.4), which fits a distributed
-"when" code.
+**Status.** Causal: neuron 17 is the main carrier of the running max's value,
+and with the gap (1, 5) and 2nd-max (31) neurons it carries 80% of it. The
+rest is spread over neurons that hold the max at particular lags (H4).
 
-**Status.** Speculative.
+### H4. Position is encoded by lag: a reset-started clock and lag-tagged copies of the max
 
-**Also open.** Neuron 20 is on for 75-99% of inputs from steps 2-8 but drops
-to 85% at t=9. Something specific happens at the last step.
+**Original claim (speculative).** Something must remember *when* the max and
+2nd max arrived; the time-varying neurons might encode time since events.
+
+**Result (roadmap step 3).** Confirmed and made specific.
+(`python scripts/state_analysis.py --hidden 32 --seq-len 10` → `results/2nd_argmax_32x10/state/`;
+`python scripts/lag_codes.py --hidden 32 --seq-len 10` → `results/2nd_argmax_32x10/lag_codes/`.)
+
+1. **The hidden state is mostly the minimal algorithm state.** An exact online
+   algorithm needs only the max and 2nd max so far and their lags (steps since
+   each arrived). Grouping inputs by (step, lag of max, lag of 2nd max) and
+   fitting linearly in the two values and the current input within each group
+   explains each neuron's value with median R² = 0.94 (21 of 32 neurons ≥ 0.9;
+   positions alone give 0.59). The 16x10 model scores higher (0.97, 15 of 16
+   ≥ 0.9). The handcrafted model scores lower on this test (13 of 22 ≥ 0.9)
+   because its shift register stores every past input, not just the top two.
+2. **A clock restarted by every new max.** Neuron 7's resets (H5) put its
+   targets in a fixed state one step after a new max. From then on, many
+   neurons switch on and off according to the lag alone: P(on | lag of max = k)
+   varies by a median of only 0.02 across steps t for lags ≥ 2. Examples, with
+   P(on) at each lag k = 0..9:
+   - neuron 27: on only at lags 3 and 7 (1.00), otherwise ≤ 0.04 apart from
+     lags 0, 6, 9 (0.39, 0.37, 0.51);
+   - neuron 11: on at lags 3, 5, 9 (1.00, 1.00, 0.97) and 7 (0.86), off at 1, 2, 4, 6;
+   - neuron 10: on at lags 4-5 (0.66, 0.78), off at 1-3 and 6-8;
+   - neuron 24: off only at lag 4 (0.01); neuron 30: off only at lag 5 (0.04);
+   - neurons 25, 28: off only at lag 1 (0.10), the reset state;
+   - neuron 3: ramps up with lag (0.07 at lag 2, 0.49, 0.72, then 0.81-0.88).
+3. **Lag-tagged copies of the max.** Some neurons carry the max value only
+   when it arrived a specific number of steps ago (coefficient on the max at
+   that lag, final step): neuron 22 at lag 2 (2.0), 19 at lag 3 (1.6), 2 at
+   lag 6 (2.6), 26 at lag 7 (4.0), 15 at lag 8 (3.6). This is why the
+   dictionary matched them, partially, to delayed copies of the input
+   (`relu(x_{t-k})`, R² 0.63-0.80). They work like the handcrafted shift
+   register, but only for the max.
+4. **"Reference minus current" neurons with a lag-dependent reference.**
+   Neurons 0, 6, 13, 18, 29 are ≈ `b·max + c·2nd − 1.7·x_t` with `b + c`
+   roughly constant and the split between max and 2nd switching with the lag
+   (e.g. neuron 13: mostly max at lags 2, 5, 7, 8; mostly 2nd at 3, 4, 6, 9).
+   Because the model is scale-free, a difference between two such neurons
+   is proportional to `max − 2nd`, with a sign set by the lag.
+5. **At the final step these become position flags.** Lag k at the last step
+   is position 9 − k, so clock neurons read as "position p is (not) in the
+   top two" (`state/summary.json`, `p_on_final_given_pos_in_top2`): neuron 25
+   is off when position 8 holds the max or 2nd max (P(on) 0.009 vs 0.973
+   otherwise), 24 when position 5 does (0.002 vs 0.940), 20 when position 0
+   does (0.265 vs 0.996); 22 is on when position 7 does (1.000 vs 0.163).
+
+**Status.** Lag code: correlational but very clean (exact 0/1 on-rates,
+step-invariant). Clock driven by the resets: causal for the reset itself
+(H5); the downstream clock dynamics are not yet causally tested.
+
+**Open.** The lag of the 2nd max is encoded less cleanly: P(on | lag of 2nd)
+varies more across steps (median spread 0.06 for lags ≥ 2, 90th percentile
+0.28). How the readout combines these codes into logits 0-8 is the next
+question.
 
 ## B. Large weights implement discrete logic
 
@@ -240,20 +301,22 @@ Not a claim about one neuron but a reason to expect this pattern:
    large weight that survives training is probably doing real work. This fits
    the ablations: removing neuron 7 or 16 costs 75-90% accuracy.
 
-## C. Overall sketch (speculative)
+## C. Overall sketch
 
 Putting H1-H6 together, the model may be running an online algorithm much like
 the handcrafted 10-step model:
 
 1. **Detect events** each step: new max (neuron 7), new top-2 (neuron 16).
-2. **Hold running values** in always-on neurons: max so far (17), 2nd max so
-   far (31), and a mixture including their gap (5).
+2. **Hold running values**: max so far (17), 2nd max so far (31), their gap
+   (1, 5).
 3. **Reset stale state** when an event fires (large negative W_hh from 7 and 16).
-4. **Track when** things happened, in the time-varying neurons (H4).
+4. **Track when** things happened: a clock restarted by each reset (10, 11,
+   24, 25, 27, 28, 30, ...) and lag-tagged copies of the max (2, 15, 19, 22,
+   26) (H4).
 5. **Read out** the position, with hard vetoes for impossible answers: for
    the last position, "too big" (neuron 7, H6) and "too small" (neuron 12, H6b).
 
-Steps 1, 3 and 5 now have causal support (roadmap step 2).
+Steps 1, 2 (neuron 17), 3 and 5 have causal support (roadmap steps 2-3); step 4 is a clean correlational result.
 
 The hand-built model (`handcrafted_2nd_argmax(10)`) uses a different but
 related scheme: a shift register of past inputs, plus running max and
@@ -262,6 +325,33 @@ related scheme: a shift register of past inputs, plus running max and
 (handcrafted neurons 19 and 20), and a linear fit on all 22 handcrafted
 neurons explains a median R² of 0.83 of each 32x10 neuron's value (0.95 for
 the 16x10 blog model). See the step 1 results in [PLAN.md](PLAN.md#roadmap). Comparing the two is part of roadmap step 4 in [PLAN.md](PLAN.md#roadmap).
+
+## D. Neuron roles in 32x10
+
+Summary after roadmap steps 1-3. *Drop* is the accuracy lost under mean
+ablation at all steps (`dictionary/dictionary.md`); *state R²* is the share of
+the neuron's value explained by the ideal state plus current input
+(`state/summary.json`).
+
+| neuron | role | evidence | drop | state R² |
+|---|---|---|---|---|
+| 7 | new positive max: `max0 − max0_prev` (H1) | causal | 0.88 | 1.00 |
+| 16 | new positive top-2 value (H2) | causal | 0.75 | 0.93 |
+| 17 | running max (H3) | causal | 0.58 | 1.00 |
+| 31 | running 2nd max | correlational (R² 0.96) | 0.33 | 0.96 |
+| 1, 5 | gap between max and 2nd max | correlational (per-lag fits) | 0.25, 0.31 | 0.96, 0.96 |
+| 12 | how far x_t is below the running 2nd max; vetoes position 9 (H6b) | causal (veto) | 0.44 | 1.00 |
+| 0, 13, 29 | reference − current input, reference switches max/2nd by lag; reset by 7 | causal (reset), correlational (role) | 0.37, 0.45, 0.46 | 0.99 |
+| 6, 18 | reference − current input, as above, not reset by 7 | correlational | 0.27, 0.20 | 0.99 |
+| 10, 11, 27 | clock: on at specific lags of the max | correlational | 0.003, 0.14, 0.07 | 0.90-0.98 |
+| 24, 30 | clock: off at one lag (4, 5) | correlational | 0.08, 0.33 | 0.79 |
+| 25, 28 | clock: off only right after a reset | causal (reset) | 0.19, 0.11 | 0.89, 0.94 |
+| 3 | clock: ramps up with lag; reset by 7 and 16 | causal (reset), correlational | 0.16 | 0.94 |
+| 2, 15, 19, 22, 26 | copy of the max at one lag (6, 8, 3, 2, 7) | correlational | 0.06-0.33 | 0.86-0.96 |
+| 21, 23 | on when x_t is a new max (final-step readout) | correlational | 0.18, 0.23 | 0.98, 0.89 |
+| 20 | off when position 0 is in the top two (at the final step) | correlational | 0.08 | 0.86 |
+| 8 | always on; carries the max more at larger lags | unclear | 0.08 | 0.88 |
+| 4, 9, 14 | unexplained; ablation costs ≤ 2% | — | ≤ 0.02 | 0.66-0.83 |
 
 ## Testing
 

@@ -16,6 +16,11 @@ H5 (resets). For each source neuron, targets are neurons j with
 W_hh[j, source] < -reset_threshold. We measure P(target is 0 at t+1) when the
 source is on vs off at t, and the effect of removing those edges.
 
+H3 (memory). Change the *value* of the running max at an earlier step,
+keeping its position, so the stored max differs between clean and src. Then
+patch subsets of neurons at step t and measure whether the max-detector's
+decision at t+1 and the final prediction follow src.
+
 H6 (vetoes). Remove single readout weights (e.g. neuron 7 -> logit 9) and
 measure accuracy overall and by argmax position.
 
@@ -88,6 +93,47 @@ def flip_rates(model, x, subsets, steps, seed):
                 pred = patch(model, clean[differ], src[differ], neurons=neurons, steps=[t]).logits.argmax(-1)
                 results[kind][name].append((pred == pred_src[differ]).float().mean().item())
     return results, informative
+
+
+def memory_pairs(x, t, seed=0):
+    """Pairs differing only in the value of the running max of x_0..x_t (same position).
+
+    The max is moved up or down by a random amount, never below the 2nd largest,
+    so every running-order event up to step t is unchanged.
+    """
+    gen = th.Generator().manual_seed(seed + 7000 + t)
+    prefix = x[:, : t + 1]
+    top2 = prefix.topk(2, dim=1)
+    pos = top2.indices[:, 0]
+    gap = top2.values[:, 0] - top2.values[:, 1]
+    up = th.rand(len(x), generator=gen) < 0.5
+    delta = th.where(up, th.rand(len(x), generator=gen) * 1.0 + 0.1,
+                     -th.rand(len(x), generator=gen) * gap * 0.9)
+    src = x.clone()
+    src[th.arange(len(x)), pos] += delta
+    return x, src
+
+
+def memory_test(model, x, max_neuron, subsets, steps, seed=0):
+    """For each subset: agreement with src of the max detector at t+1 and of the final prediction."""
+    out = {name: {"detector_t+1": [], "prediction": []} for name in subsets}
+    informative = []
+    for t in steps:
+        clean, src = memory_pairs(x, t, seed)
+        with th.no_grad():
+            c_clean, c_src = run_with_cache(model, clean), run_with_cache(model, src)
+        det_differ = c_clean.mask[:, t + 1, max_neuron] != c_src.mask[:, t + 1, max_neuron]
+        pred_src = c_src.logits.argmax(-1)
+        pred_differ = c_clean.logits.argmax(-1) != pred_src
+        informative.append({"t": t, "frac_detector_differs": det_differ.float().mean().item(),
+                            "frac_prediction_differs": pred_differ.float().mean().item()})
+        for name, neurons in subsets.items():
+            patched = patch(model, clean, src, neurons=neurons, steps=[t])
+            det = patched.mask[:, t + 1, max_neuron] == c_src.mask[:, t + 1, max_neuron]
+            pred = patched.logits.argmax(-1) == pred_src
+            out[name]["detector_t+1"].append(det[det_differ].float().mean().item())
+            out[name]["prediction"].append(pred[pred_differ].float().mean().item())
+    return out, informative
 
 
 def reset_stats(model, x, sources, threshold):
@@ -209,6 +255,9 @@ def main():
     add_model_args(parser)
     parser.add_argument("--max-neuron", type=int, default=7, help="new-max detector (H1)")
     parser.add_argument("--top2-neuron", type=int, default=16, help="new-top-2 detector (H2)")
+    parser.add_argument("--memory", nargs="+", type=int, default=[17], help="running-max memory neurons (H3)")
+    parser.add_argument("--value-neurons", nargs="+", type=int, default=[1, 5, 17, 31],
+                        help="neurons carrying max / 2nd-max values (H3 comparison subset)")
     parser.add_argument("--veto", nargs="+", default=["7:9", "12:9"], help="readout edges neuron:logit (H6)")
     parser.add_argument("--reset-threshold", type=float, default=5.0)
     parser.add_argument("--n", type=int, default=2**16)
@@ -233,6 +282,13 @@ def main():
 
     flips, informative = flip_rates(model, x, subsets, steps, seed=0)
     resets = reset_stats(model, x, [m, t2], args.reset_threshold)
+    mem_subsets = {
+        f"memory {args.memory}": args.memory,
+        f"values {args.value_neurons}": args.value_neurons,
+        f"all but memory": [n for n in range(model.hidden_size) if n not in args.memory],
+        f"all but values": [n for n in range(model.hidden_size) if n not in args.value_neurons],
+    }
+    memory, memory_pairs_info = memory_test(model, x, m, mem_subsets, list(range(2, model.seq_len - 1)))
     edges = [(int(e.split(":")[1]), int(e.split(":")[0])) for e in args.veto]
     veto = veto_stats(model, x, edges)
 
@@ -241,7 +297,7 @@ def main():
     plot_veto(veto, model.seq_len, out / "veto.png")
     with open(out / "summary.json", "w") as f:
         json.dump({"model": name, "n_inputs": args.n, "steps": steps, "flip_rates": flips,
-                   "pairs": informative, "resets": resets, "veto": veto}, f, indent=2)
+                   "pairs": informative, "memory": memory, "memory_pairs": memory_pairs_info, "resets": resets, "veto": veto}, f, indent=2)
 
     print("\nFlip rates (mean over steps):")
     for kind in KINDS:
@@ -255,6 +311,12 @@ def main():
         for r in info["targets"]:
             print(f"    -> {r['target']:2d} (w={r['weight']:6.2f}): P(0|on)={r['p_zero_given_on']:.3f}"
                   f"  P(0|off)={r['p_zero_given_off']:.3f}  P(0|on, cut)={r['p_zero_given_on_edges_cut']:.3f}")
+    print("\nMemory (H3): agreement with src after patching at step t (t = 2..T-2)")
+    for sub, r in memory.items():
+        print(f"  patch {sub:22s}: detector at t+1 {np.mean(r['detector_t+1']):.3f} "
+              f"{[round(v, 2) for v in r['detector_t+1']]}  final prediction {np.mean(r['prediction']):.3f}")
+    print(f"  (detector differs in {np.mean([i['frac_detector_differs'] for i in memory_pairs_info]):.1%} of pairs, "
+          f"prediction in {np.mean([i['frac_prediction_differs'] for i in memory_pairs_info]):.1%})")
     print("\nVetoes:")
     for vname, info in veto.items():
         print(f"  {vname:20s} acc={info['accuracy']:.4f}  acc|argmax@last={info['accuracy_by_argmax_pos'][-1]:.4f}"

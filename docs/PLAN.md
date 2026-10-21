@@ -237,21 +237,41 @@ causal. Results in `results/2nd_argmax_32x10/causal/`:
 
 ### Step 3: Memory and timing neurons in 32x10 (H3, H4)
 
-- [ ] **H3.** Run the step 1 dictionary on 32x10. Fit always-on neurons
-      (5, 8, 17, 31) against several running values at once. Causal test:
-      does shifting neuron 17 by δ act like raising the stored max?
-- [ ] **Fit pre-activations, not just values.** Each neuron is
-      `ReLU(pre_t)`, and `pre_t` is linear in `x_t` and `h_{t-1}`. Fitting
-      `pre_t` on `x_t` plus the handcrafted basis at `t-1` tests "this
-      neuron computes a ReLU of handcrafted quantities" without the clipping
-      that limits the linear fits in step 1.
-- [ ] **H4.** For neurons that are neither event detectors nor always on,
-      plot value against "steps since last new max" and "steps since last new
-      top-2". Find what encodes *position*.
-- [ ] Neuron 20's drop at the last step; neuron 8; neuron 12's role.
+- [x] **H3.** Per-lag fits resolve neurons 1 and 5 as the max − 2nd gap.
+      Causal test (`causal_tests.py`, memory section): pairs that differ only
+      in the running max's *value*, patched at one step.
+- [x] ~~Fit pre-activations on the handcrafted basis.~~ Superseded by the
+      state analysis below, which handles clipping by fitting within groups
+      of inputs and needs no handcrafted basis.
+- [x] **H4.** `algzoo_interp/state.py` + `scripts/state_analysis.py` (how
+      much of each neuron the ideal online state explains; position codes;
+      readout map; position flags) and `scripts/lag_codes.py` (on/off rate
+      and per-lag fits by lag of max / 2nd max).
+- [x] Neuron 12 (H6b, step 2), neuron 20 (position-0 flag), neuron 8 (still
+      unclear, 8% drop).
 
 **Done when** every neuron with a non-negligible ablation effect has a
 dictionary label with causal support, or is explicitly listed as unexplained.
+**Done**, with a caveat: every neuron has a role in the table in
+[HYPOTHESES.md §D](HYPOTHESES.md#d-neuron-roles-in-32x10), but the clock and
+lag-copy roles are correlational (very clean, not yet patched). Neuron 8 is
+unclear; 4, 9, 14 are unexplained but cost ≤ 2% when ablated.
+
+Results:
+
+- **The hidden state is mostly the minimal algorithm state:** max, 2nd max,
+  and their lags, plus the current input. Median R² 0.94 for 32x10 (21 of 32
+  neurons ≥ 0.9), 0.97 for 16x10.
+- **Position is a lag code.** Neuron 7's resets restart a clock: from lag 2
+  on, many neurons' on/off state depends only on the lag of the max (median
+  variation across steps 0.02), e.g. neuron 27 on exactly at lags 3 and 7.
+  Neurons 22, 19, 2, 26, 15 carry the max only at lags 2, 3, 6, 7, 8.
+- **H3:** neuron 17 alone transfers 65% of a changed max value to the next
+  new-max decision; 17 with 1, 5, 31 transfers 80%; everything else 20%.
+- **Not yet explained:** how the readout turns these codes into logits 0-8,
+  and the lag of the 2nd max, which is encoded less cleanly than the lag of
+  the max. Both feed step 6 (and could start now on 32x10 if step 4 is
+  deferred).
 
 ### Step 4: Generality across seeds and sizes
 
