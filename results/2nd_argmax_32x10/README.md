@@ -25,9 +25,13 @@ many steps ago each arrived.
    weights (up to −31) zero about ten neurons on the next step.
 4. **Keep time.** From that reset, a set of neurons runs a fixed on/off
    sequence that depends only on how long ago the max arrived (a clock). Other
-   neurons carry the max value only at one particular lag (a delay line for
-   the max). Together these encode *where* the max and 2nd max are.
-5. **Read out.** The readout decodes the 2nd max's position from this code.
+   neurons each watch one lag and mark whether the input that many steps back
+   is among the top two (a delay line). Together these encode *where* the max
+   and 2nd max are.
+5. **Read out.** The final state is (on average) a sum of a code for the
+   max's position and a code for the 2nd max's position, and the readout is
+   a matched filter on the second. A delay line marks which recent inputs
+   are in the top two, surviving the reset.
    The last position gets two hard vetoes: "x_9 is the new max" (neuron 7,
    weight −65) and "x_9 is below the running 2nd max" (neuron 12, weight −40).
 6. **Compare against max(0, …).** All comparisons are against running values
@@ -75,19 +79,47 @@ neuron's value (21 of 32 neurons ≥ 0.9). Positions alone give 0.59.
   example, neuron 27 is on exactly at lags 3 and 7, neuron 11 at lags 3, 5 and
   9, neuron 24 is off only at lag 4, and neurons 25 and 28 are off only right
   after a reset.
-- **Delay line for the max.** Neurons 22, 19, 2, 26 and 15 carry the max value
-  only when it arrived 2, 3, 6, 7 or 8 steps ago.
+- **Delay line for the top two.** Neurons 22, 19, 2, 26 and 15 carry the max
+  value when it arrived 2, 3, 6, 7 or 8 steps ago. They also stay on when
+  the input at that lag is the 2nd max (see section 5).
 - **Reference minus current input.** Neurons 0, 6, 13, 18 and 29 compute
   roughly `b·max + c·2nd − 1.7·x_t`, where the split between max and 2nd
   switches with the lag.
 
 ![position codes](state/position_codes.png)
 
-### 5. Readout and vetoes (H6, H6b)
+### 5. Readout: a matched filter on an additive position code (H9-H11)
 
-Each logit for positions 0-8 draws on about five neurons from the clock,
-delay-line and reference groups (`state/readout.png`). The last position is
-handled by two hard vetoes:
+From `python scripts/readout_analysis.py --hidden 32 --seq-len 10`
+(`readout/summary.json`).
+
+- **The final state is an additive position code.** Averaged over inputs
+  and normalised to unit length (which doesn't change the prediction), the
+  final state is a(max position) + b(2nd position), with R² = 0.962. A
+  surrogate built from a(i) + b(j) alone is 100% accurate.
+- **The readout is a matched filter on b.** W·b(j) is highest for logit j,
+  beating every other logit by 0.9-1.4 for positions 0-8 (unit-normalised
+  scale). W·a(i) slightly *favours* the max's own position (+0.3 to +0.8),
+  which the larger 2nd-max margin overrides.
+- **A delay line for the top two.** Neurons 22, 19, 2, 26 and 15 are on
+  99-100% of the time when the input 2, 3, 6, 7 or 8 steps back is the
+  running max *or* the running 2nd, so they keep marking the old max after a
+  new max demotes it. Neurons 25, 24, 30 and 20 flag the same for lags 1, 4,
+  5 and 9 by switching off (87-94% accurate).
+- **Causal check.** For inputs that differ only in where the 2nd max is,
+  copying the final state of the delay line, membership flags, reference
+  neurons and neuron 12 (15 neurons) from the other input moves the
+  prediction to the other input's answer 80% of the time. No other group
+  moves it more than 2%.
+- **Errors.** Per input, about 45% of the normalised final state depends on
+  the values rather than the positions. The readout mostly ignores it: only
+  12.6% of it lies in the 9 directions the readout can see, against 28% for a
+  random direction. It flips the decision on 0.56% of inputs, exactly the
+  model's error rate.
+
+![position codes and readout](readout/codes.png)
+
+The last position is handled by two hard vetoes:
 
 - Removing **7 → logit 9** (−65) drops accuracy on inputs whose max is last
   from 99.2% to 72.4%, and changes nothing elsewhere.
@@ -180,9 +212,10 @@ failing 8x10 model has no new-max detector at all.
 
 ## What isn't explained
 
-- **How the readout decodes positions 0-8.** The surrogate shows that the
-  final state's dependence on (lag of max, lag of 2nd) is enough, but not
-  *how* each logit combines the clock, delay-line and reference neurons.
+- **The last 20% of the readout's 2nd-position information** is spread
+  over neurons outside the 15 identified above, and how the reference neurons
+  separate the max from the 2nd at each lag hasn't been worked out neuron by
+  neuron.
 - **The lag of the 2nd max** is encoded less cleanly than the lag of the max
   (median spread of P(on) across steps 0.06 vs 0.02).
 - **Clock dynamics** are correlational: we haven't patched the clock neurons.
@@ -200,5 +233,6 @@ python scripts/causal_tests.py --hidden 32 --seq-len 10      # causal/
 python scripts/state_analysis.py --hidden 32 --seq-len 10    # state/
 python scripts/lag_codes.py --hidden 32 --seq-len 10         # lag_codes/
 python scripts/explain_32x10.py --hidden 32 --seq-len 10     # explain/
+python scripts/readout_analysis.py --hidden 32 --seq-len 10  # readout/
 python scripts/compare_models.py && python scripts/summarize_causal.py  # ../compare/
 ```

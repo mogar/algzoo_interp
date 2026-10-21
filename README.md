@@ -20,6 +20,10 @@ how many steps ago each arrived.
   the gap between them.
 - **Resets and a clock.** Each new max zeroes about ten neurons, which then
   run a fixed on/off sequence that encodes how long ago the max arrived.
+- **A position code and a matched filter.** On average the final state is a
+  sum of a code for where the max is and a code for where the 2nd max is. A
+  delay line marks which recent inputs are in the top two, and the readout
+  picks out the 2nd-max code.
 - **Vetoes.** The two largest readout weights rule out the last position when
   it is too big (the new max) or too small (below the 2nd max).
 - **Checks.** A surrogate built only from the positions of the max and 2nd
@@ -126,6 +130,7 @@ weights/         downloaded checkpoints (gitignored)
 | `compare_models.py`, `summarize_causal.py` | Do the mechanisms recur across seeds and sizes? |
 | `explain_small.py`, `exact_accuracy.py` | Full explanation and exact accuracy for the 4x3 model |
 | `explain_32x10.py` | Rebuild, resample and error checks for 32x10 |
+| `readout_analysis.py` | How does the readout decode the 2nd max's position? |
 | `plot_regions_2d.py`, `neuron_hypotheses.py` | Figures for GEOMETRY.md, and early evidence for HYPOTHESES.md |
 
 Each script's docstring explains its method and outputs (`python scripts/<name>.py --help`).

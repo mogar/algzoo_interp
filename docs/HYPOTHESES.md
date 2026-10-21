@@ -181,7 +181,9 @@ rest is spread over neurons that hold the max at particular lags (H4).
    lag 6 (2.6), 26 at lag 7 (4.0), 15 at lag 8 (3.6). This is why the
    dictionary matched them, partially, to delayed copies of the input
    (`relu(x_{t-k})`, R² 0.63-0.80). They work like the handcrafted shift
-   register, but only for the max.
+   register, but only for the top two. **Update (§G, H11):** they are also on
+   when the input at their lag is the running 2nd, so they mark top-two
+   membership, not just the max.
 4. **"Reference minus current" neurons with a lag-dependent reference.**
    Neurons 0, 6, 13, 18, 29 are ≈ `b·max + c·2nd − 1.7·x_t` with `b + c`
    roughly constant and the split between max and 2nd switching with the lag
@@ -347,7 +349,7 @@ the neuron's value explained by the ideal state plus current input
 | 24, 30 | clock: off at one lag (4, 5) | correlational | 0.08, 0.33 | 0.79 |
 | 25, 28 | clock: off only right after a reset | causal (reset) | 0.19, 0.11 | 0.89, 0.94 |
 | 3 | clock: ramps up with lag; reset by 7 and 16 | causal (reset), correlational | 0.16 | 0.94 |
-| 2, 15, 19, 22, 26 | copy of the max at one lag (6, 8, 3, 2, 7) | correlational | 0.06-0.33 | 0.86-0.96 |
+| 2, 15, 19, 22, 26 | delay line: on when the input at lag 6, 8, 3, 2, 7 is in the top two (H11) | causal as a group (§G) | 0.06-0.33 | 0.86-0.96 |
 | 21, 23 | on when x_t is a new max (final-step readout) | correlational | 0.18, 0.23 | 0.98, 0.89 |
 | 20 | off when position 0 is in the top two (at the final step) | correlational | 0.08 | 0.86 |
 | 8 | always on; carries the max more at larger lags | unclear | 0.08 | 0.88 |
@@ -430,6 +432,86 @@ numbers from `python scripts/explain_32x10.py --hidden 32 --seq-len 10`.
   threshold: it fires up to about 1% below the running 2nd max. But it alone
   doesn't produce the errors: predicting them from its bias gives 8,858
   against 833 measured. Near-ties are resolved jointly by several neurons.
+
+## G. How the readout decodes positions 0-8
+
+Numbers from `python scripts/readout_analysis.py --hidden 32 --seq-len 10`
+(`results/2nd_argmax_32x10/readout/`), on 2^19 fresh float64 inputs. Groups
+are the roles in §D, with "clock" = 3, 10, 11, 27, 28 and "membership flags" =
+20, 24, 25, 30.
+
+### H9. The final state is an additive position code, read by a matched filter
+
+**Claim.** Averaged over inputs, the final hidden state (normalised to unit
+length, which doesn't change the prediction) is a sum of two codes, a(i) for
+the max's position and b(j) for the 2nd max's position. The readout acts as a
+matched filter on b: W·b(j) is highest for logit j.
+
+**Evidence.**
+- The per-cell mean states fit a(i) + b(j) with R² = 0.962.
+- A surrogate final state a(i) + b(j) is 100% accurate and agrees with the
+  model on 99.44% of inputs: every input the model gets right.
+- **B = W·b is diagonal** (`readout/codes.png`). For positions 0-8, logit j
+  beats every other logit by 0.9-1.4 (unit-normalised scale) when the 2nd max
+  is at j. Logit 9 is suppressed by about 9.5 unless the 2nd max is at 9.
+- **A = W·a is weakly diagonal for positions 0-8** (+0.3 to +0.8): being the
+  max slightly *favours* a position, which the 2nd-max code's larger margin
+  overrides. Position 9 is the exception: a vetoes it (−8.3) when the max is
+  there, which is neuron 7's veto (H6).
+
+**Status.** Correlational (fits), plus the surrogate test.
+
+### H10. The model's errors are value-dependent noise overwhelming the position margin
+
+**Claim.** Per input, the state also has a large value-dependent part (a(i) +
+b(j) explains only 55% of each normalised final state). The readout largely
+ignores it, and the model errs when it doesn't.
+
+**Evidence.**
+- The value-dependent part flips some readout comparison on 0.56% of inputs,
+  exactly the model's error rate. Typically it moves the decisive margin by
+  26% (99th percentile: 207%).
+- The readout can only see 9 of the 32 dimensions (those that change logit
+  differences). A random direction would have 28% of its variance there; the
+  value-dependent part has only 12.6%.
+
+**Status.** Correlational, strong. It links to H8: near-ties and negative
+values make the margin small relative to this noise.
+
+### H11. The 2nd max's position is carried by a top-2 delay line and per-lag membership flags
+
+**Claim.** For each lag k, a neuron flags "the input k steps ago is among the
+running top two". This holds whether that input is the max or the 2nd, so
+it survives when a new max demotes the old one. Value-comparison neurons then
+separate the max from the 2nd.
+
+**Evidence.**
+- **Delay-line neurons** (22, 19, 2, 26, 15 for lags 2, 3, 6, 7, 8) are on
+  99.1-100% of the time when the input at their lag is the running max *or*
+  the running 2nd, against 24-82% otherwise (and at lower amplitude),
+  pooled over all steps.
+- **Membership flags** for other lags are off when the input at that lag is
+  in the top two: neuron 25 (lag 1, 87% accurate as a classifier), 24 (lag 4,
+  91%), 30 (lag 5, 93%), 20 (lag 9, 94%), against majority baselines of
+  57-80%. Lags 7 and 8 have no better-than-baseline on/off flag; there the
+  delay neurons' amplitude carries membership.
+- **Final-step ablations** (`final_step_ablation`): mean-ablating the
+  membership flags at the last step only cuts accuracy to 73% (after) / 72%
+  (before); the delay line to 90% / 72%; the reference neurons to 44% / 59%.
+- **Patching** between inputs with the same max position but a different 2nd
+  position, copying a group's final state from the other input, moves the
+  prediction to the other input's answer: delay line 14% (23% in the
+  "before" case), membership flags 9%; delay + flags 46% (63% before);
+  + reference 67%; + neuron 12 **80%** (15 neurons). No other group moves it
+  more than 2%.
+
+**Status.** Causal for the group (80% with 15 neurons), correlational for
+individual neurons.
+
+**Open.** The remaining 20% of the 2nd max's position is spread over other
+neurons. The delay line covers lags 2, 3, 6, 7, 8 and the flags cover 1, 4, 5,
+9, but how the reference neurons separate the max from the 2nd at each lag
+hasn't been written out neuron by neuron.
 
 ## Testing
 

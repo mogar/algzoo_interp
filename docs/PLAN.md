@@ -383,6 +383,29 @@ logits 0-8 combines the clock, delay-line and reference neurons; the lag code
 for the 2nd max; patching the clock; and a joint model of near-tie
 resolution for a sampling-free accuracy estimate.
 
+### Step 6b: How the readout decodes positions 0-8
+
+- [x] `scripts/readout_analysis.py` → `results/2nd_argmax_32x10/readout/`;
+      findings in [HYPOTHESES.md §G](HYPOTHESES.md#g-how-the-readout-decodes-positions-0-8).
+
+**Result:**
+
+- **Additive code + matched filter.** The unit-normalised mean final state is
+  a(max position) + b(2nd position) (R² 0.962). The readout's W·b(j) is
+  highest at logit j, by 0.9-1.4; W·a slightly favours the max's own
+  position, and the 2nd-max margin overrides it.
+- **A delay line for the top two.** Delay neurons are on 99-100% whenever the
+  input at their lag is the running max *or* 2nd, so they survive a new max
+  demoting the old one. Membership flags cover the other lags.
+- **Causal.** Patching 15 neurons (delay line, flags, reference, 12) moves
+  the prediction to another input's 2nd-max position 80% of the time.
+- **Errors.** The value-dependent part of the state flips the readout on
+  exactly the model's 0.56% error rate.
+
+**Open:** the remaining 20% of the 2nd-position information, and a
+neuron-by-neuron account of how the reference neurons separate the max from
+the 2nd at each lag.
+
 ### Step 7: Optional interactive viewer
 
 Only if static plots become limiting: a Streamlit app under `app/` to step
