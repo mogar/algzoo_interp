@@ -505,13 +505,61 @@ separate the max from the 2nd.
   + reference 67%; + neuron 12 **80%** (15 neurons). No other group moves it
   more than 2%.
 
-**Status.** Causal for the group (80% with 15 neurons), correlational for
-individual neurons.
+**Where the 15 neurons fall short** (`patch_2nd_position.base_15_by_position`).
+They transfer the 2nd max's position least well when it moves to position 8
+(54%) or 7 (59%), i.e. lags 1-2, and when the max is at position 9 (58%).
+Greedily adding neurons (`greedy_from_base_15`): + 3 → 85%, + 4 → 89%, + 14 →
+92%, + 8 → 93%, + 5 → 94%, + 21 → 94%, + 16 → 96%, + **23 → 99.6%** (23
+neurons). Neuron 14 is a second lag-1 flag (on when position 8 is in the top
+two; see `state/summary.json`), and 21 and 23 cover the cases where the last
+input is involved.
 
-**Open.** The remaining 20% of the 2nd max's position is spread over other
-neurons. The delay line covers lags 2, 3, 6, 7, 8 and the flags cover 1, 4, 5,
-9, but how the reference neurons separate the max from the 2nd at each lag
-hasn't been written out neuron by neuron.
+**Status.** Causal: 23 neurons carry 99.6% of the 2nd max's position at the
+readout; 15 of them (delay line, flags, reference, 12) carry 80%.
+
+### H12. Which top-two input is the max is a separate code, carried by the reference neurons and the clock
+
+**Claim.** The membership code (H11) is the same whether an input is the max
+or the 2nd. A separate code says which of the two is the max, carried by the
+reference neurons and the clock.
+
+**Evidence** (`swap_max_and_2nd`). Swapping the max's and 2nd max's values
+keeps the set of top-two positions and only flips which one is the max. The
+correct answer moves from the 2nd's position to the old max's. Patching a
+group's final state from the swapped input moves the prediction there:
+
+| group patched | prediction moves |
+|---|---|
+| reference (0, 6, 13, 18, 29) | 62% |
+| clock (3, 10, 11, 27, 28) | 35% |
+| new-max detector (7) | 9% |
+| last-max (21, 23) | 3% |
+| **delay line, membership flags** | **0%** |
+| everything else | ≤ 0.5% |
+
+The two codes are cleanly separated: the membership neurons carry no
+max/2nd information. Greedy patching reaches 94% with 10 neurons: 13, 6, 3, 7,
+0, 29, 11, 28, 21, 23.
+
+**Sufficiency** (`role_sets.sufficiency`, final step, unit-normalised). Keeping
+only the membership neurons (delay line, flags, 14), the identity neurons
+(reference, clock, 7) and the last-position neurons (12, 16, 21, 23), with the
+other 7 neurons (1, 4, 5, 8, 9, 17, 31) mean-ablated, agrees with the model
+on 95.0% of inputs. Membership + identity alone: 75%; either alone: 22-28%.
+
+**What the other 7 do.** They aren't position carriers. Resampling them from
+other inputs with the same max and 2nd positions changes 3.8% of predictions,
+about as many as resampling the *kept* 25 the same way (4.2%), and the changed
+inputs have smaller margins (median 0.38 vs 0.56 overall). So the remaining
+gap is value-dependent sensitivity on low-margin inputs. A hypothesis that the
+value neurons cancel the reference neurons' value-dependent part is refuted:
+their within-cell contributions to the margin are uncorrelated (−0.02).
+
+**Status.** Causal at group level.
+
+**Open.** How each reference neuron's lag-dependent mix of max and 2nd
+(`lag_codes/coefs_lag_max.png`) combines with the clock to mark the max at
+each lag, written out neuron by neuron.
 
 ## Testing
 

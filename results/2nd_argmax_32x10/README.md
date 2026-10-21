@@ -30,8 +30,9 @@ many steps ago each arrived.
    and 2nd max are.
 5. **Read out.** The final state is (on average) a sum of a code for the
    max's position and a code for the 2nd max's position, and the readout is
-   a matched filter on the second. A delay line marks which recent inputs
-   are in the top two, surviving the reset.
+   a matched filter on the second. Two separate codes feed it: a delay line
+   marks which recent inputs are in the top two (surviving the reset), and
+   the reference neurons and clock say which of those two is the max.
    The last position gets two hard vetoes: "x_9 is the new max" (neuron 7,
    weight −65) and "x_9 is below the running 2nd max" (neuron 12, weight −40).
 6. **Compare against max(0, …).** All comparisons are against running values
@@ -110,7 +111,18 @@ From `python scripts/readout_analysis.py --hidden 32 --seq-len 10`
   copying the final state of the delay line, membership flags, reference
   neurons and neuron 12 (15 neurons) from the other input moves the
   prediction to the other input's answer 80% of the time. No other group
-  moves it more than 2%.
+  moves it more than 2%. Adding 8 more neurons (3, 4, 14, 8, 5, 21, 16, 23)
+  brings it to 99.6%.
+- **A separate code says which top-two input is the max.** Swapping the max's
+  and 2nd max's values leaves the membership code unchanged, and patching the
+  delay line or flags from the swapped input moves the prediction 0% of the
+  time. The identity comes from the reference neurons (62%), the clock (35%)
+  and the new-max detector (9%). Ten neurons carry 94%.
+- **Sufficiency.** Keeping only the membership, identity and last-position
+  neurons (25) at the final step and mean-ablating the other 7 agrees with the
+  model on 95% of inputs. The other 7 don't carry position: resampling them
+  within the same position cell changes about as many predictions as
+  resampling the kept 25.
 - **Errors.** Per input, about 45% of the normalised final state depends on
   the values rather than the positions. The readout mostly ignores it: only
   12.6% of it lies in the 9 directions the readout can see, against 28% for a
@@ -212,10 +224,9 @@ failing 8x10 model has no new-max detector at all.
 
 ## What isn't explained
 
-- **The last 20% of the readout's 2nd-position information** is spread
-  over neurons outside the 15 identified above, and how the reference neurons
-  separate the max from the 2nd at each lag hasn't been worked out neuron by
-  neuron.
+- **Neuron-by-neuron identity code.** We know which neurons say which top-two
+  input is the max (reference and clock), but not how each one's lag-dependent
+  mix combines to do it at each lag.
 - **The lag of the 2nd max** is encoded less cleanly than the lag of the max
   (median spread of P(on) across steps 0.06 vs 0.02).
 - **Clock dynamics** are correlational: we haven't patched the clock neurons.

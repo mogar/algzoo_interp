@@ -402,9 +402,20 @@ resolution for a sampling-free accuracy estimate.
 - **Errors.** The value-dependent part of the state flips the readout on
   exactly the model's 0.56% error rate.
 
-**Open:** the remaining 20% of the 2nd-position information, and a
-neuron-by-neuron account of how the reference neurons separate the max from
-the 2nd at each lag.
+- **The remaining 20%.** 8 more neurons (3, 4, 14, 8, 5, 21, 16, 23) take
+  the 2nd-position transfer to 99.6%. The 15 fall short mainly at lags 1-2
+  and when the max is last.
+- **Max vs 2nd identity is a separate code** (H12). Swapping the max and 2nd
+  leaves the membership code unchanged (delay line and flags transfer 0%).
+  The reference neurons (62%), clock (35%) and new-max detector (9%) carry
+  which input is the max; 10 neurons carry 94%.
+- **Sufficiency.** The 25 membership, identity and last-position neurons,
+  with the other 7 mean-ablated, agree with the model on 95% of inputs. The
+  other 7 don't carry position (resampling them within the same position
+  cell changes as many predictions as resampling the kept 25).
+
+**Open:** a neuron-by-neuron account of how the reference neurons' lag-dependent
+mix and the clock mark the max at each lag.
 
 ### Step 7: Optional interactive viewer
 
