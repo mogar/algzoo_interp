@@ -434,8 +434,8 @@ through hidden states for chosen inputs, or to explore cones of small models.
 
 1. ~~The hooked RNN matches the model exactly, and the tools recover the
    handcrafted 10-step model's neurons~~ (step 1, done).
-2. ~~Causal neuron dictionary for 32x10~~ (steps 2-3, done; clock roles
-   correlational).
+2. ~~Causal neuron dictionary for 32x10~~ (steps 2-3, done; clock causal at
+   group level via `clock_test.py`).
 3. ~~Roles compared across seeds, 16x10 and smaller models~~ (step 4, done).
 4. A small model passes all four explanation checks (step 5: 4x3 passes
    three; the compact rebuild reaches 98.8%, just short of 99%).

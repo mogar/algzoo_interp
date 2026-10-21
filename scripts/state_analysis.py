@@ -15,7 +15,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,8 +24,8 @@ from algzoo_interp import get_weights, randn_inputs, run_with_cache
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.plots import heatmap, savefig, to_numpy
 from algzoo_interp.state import state_r2
+from algzoo_interp.paths import RESULTS_DIR
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 LEVELS = ["none", "values", "values+input"]
 LEVEL_LABELS = {"none": "positions only", "values": "+ max, 2nd values", "values+input": "+ current input"}
 

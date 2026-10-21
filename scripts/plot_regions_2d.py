@@ -10,7 +10,6 @@ Example:
 """
 
 import argparse
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,9 +17,10 @@ import torch as th
 from matplotlib.colors import ListedColormap
 
 from algzoo_interp import count_patterns, load_2nd_argmax, run_with_cache
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import savefig
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "geometry"
+OUT_DIR = RESULTS_DIR / "geometry"
 
 # Okabe-Ito: a categorical palette that stays distinguishable under colour blindness
 CATEGORICAL = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9", "#D55E00", "#F0E442", "#000000"]

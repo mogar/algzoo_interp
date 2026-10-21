@@ -18,7 +18,6 @@ import argparse
 import json
 import sys
 from dataclasses import asdict
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch as th
@@ -30,9 +29,8 @@ from algzoo_interp import ablate, randn_inputs, run_with_cache
 from algzoo_interp.dictionary import ValueFitter, build_dictionary
 from algzoo_interp.features import running_values
 from algzoo_interp.loading import add_model_args, load_from_args
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import heatmap, savefig
-
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
 
 def ablation_drops(model, x):

@@ -32,7 +32,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,9 +41,9 @@ from alg_zoo.tasks import task_2nd_argmax
 from algzoo_interp import ablate_edges, get_weights, patch, randn_inputs, run_with_cache
 from algzoo_interp.features import running_top2
 from algzoo_interp.loading import add_model_args, load_from_args
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import LINE_COLOR, savefig
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 KINDS = ["add_max", "remove_max", "add_top2", "remove_top2"]
 SUBSET_COLORS = ["#0b3a82", "#2a6fdb", "#9ec5f4", "#d55e00", "#e69f00"]
 
@@ -285,8 +284,8 @@ def main():
     mem_subsets = {
         f"memory {args.memory}": args.memory,
         f"values {args.value_neurons}": args.value_neurons,
-        f"all but memory": [n for n in range(model.hidden_size) if n not in args.memory],
-        f"all but values": [n for n in range(model.hidden_size) if n not in args.value_neurons],
+        "all but memory": [n for n in range(model.hidden_size) if n not in args.memory],
+        "all but values": [n for n in range(model.hidden_size) if n not in args.value_neurons],
     }
     memory, memory_pairs_info = memory_test(model, x, m, mem_subsets, list(range(2, model.seq_len - 1)))
     edges = [(int(e.split(":")[1]), int(e.split(":")[0])) for e in args.veto]

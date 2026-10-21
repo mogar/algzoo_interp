@@ -95,6 +95,19 @@ model, `--seed N` for a training seed other than the best, `--example` for the
 16x10 model from ARC's blog post, and `--handcrafted 10` for ARC's
 hand-built solution.
 
+## Tests and reproducing results
+
+```bash
+pytest                       # library tests, about 2 seconds
+pytest -m scripts            # runs every script end to end on small inputs, about 30 seconds
+bash scripts/run_all.sh      # regenerates every committed result, a few minutes
+git status results/          # after run_all: lists any result that changed
+```
+
+The script smoke tests write to a temporary directory, so they never touch
+`results/`. Set `ALGZOO_RESULTS_DIR` to send any script's output somewhere
+else.
+
 ## Repo layout
 
 ```
@@ -102,7 +115,7 @@ algzoo_interp/   library code
 scripts/         one runnable script per experiment; each writes to results/
 results/         figures, JSON/CSV numbers and write-ups, one folder per model
 docs/            plan, hypotheses and background notes
-tests/           pytest checks for the library
+tests/           pytest checks for the library, plus opt-in script smoke tests
 alg-zoo/         ARC's AlgZoo (git submodule)
 weights/         downloaded checkpoints (gitignored)
 ```
@@ -131,7 +144,9 @@ weights/         downloaded checkpoints (gitignored)
 | `explain_small.py`, `exact_accuracy.py` | Full explanation and exact accuracy for the 4x3 model |
 | `explain_32x10.py` | Rebuild, resample and error checks for 32x10 |
 | `readout_analysis.py` | How does the readout decode the 2nd max's position? |
+| `clock_test.py` | Does a patched clock state carry forward through the recurrence? |
 | `plot_regions_2d.py`, `neuron_hypotheses.py` | Figures for GEOMETRY.md, and early evidence for HYPOTHESES.md |
+| `run_all.sh` | Regenerate every committed result |
 
 Each script's docstring explains its method and outputs (`python scripts/<name>.py --help`).
 

@@ -17,7 +17,6 @@ Examples:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,9 +35,8 @@ from algzoo_interp import (
     run_with_cache,
 )
 from algzoo_interp.loading import add_model_args, load_from_args
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import LINE_COLOR, heatmap, savefig, to_numpy
-
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
 
 def plot_weights(model, out):

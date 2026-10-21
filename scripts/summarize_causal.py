@@ -10,11 +10,11 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import numpy as np
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+from algzoo_interp.paths import RESULTS_DIR
+
 DEFAULT = ["2nd_argmax_32x10", "2nd_argmax_32x10_seed1", "2nd_argmax_32x10_seed2",
            "2nd_argmax_32x10_seed3", "2nd_argmax_32x10_seed4"]
 

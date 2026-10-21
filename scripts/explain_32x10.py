@@ -29,7 +29,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,8 +40,8 @@ from algzoo_interp.features import lagged, running_top2
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.plots import LINE_COLOR, savefig
 from algzoo_interp.state import continuous_features, ideal_state
+from algzoo_interp.paths import RESULTS_DIR
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 LEVELS = ["none", "values", "values+input"]
 SHORTFALL_EDGES = [0, .001, .002, .003, .005, .0075, .01, .015, .02, .03, .05, 1e9]
 

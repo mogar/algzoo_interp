@@ -79,7 +79,10 @@ neuron's value (21 of 32 neurons ≥ 0.9). Positions alone give 0.59.
   only on the lag. It varies by a median of just 0.02 across steps. For
   example, neuron 27 is on exactly at lags 3 and 7, neuron 11 at lags 3, 5 and
   9, neuron 24 is off only at lag 4, and neurons 25 and 28 are off only right
-  after a reset.
+  after a reset. It is causal: swapping which top-two input is the max and
+  patching only the clock at step 4 moves the final prediction 34% of the time
+  (`clock/summary.json`). Patching the clock together with the reference
+  neurons and neuron 7 moves it 85-92%.
 - **Delay line for the top two.** Neurons 22, 19, 2, 26 and 15 carry the max
   value when it arrived 2, 3, 6, 7 or 8 steps ago. They also stay on when
   the input at that lag is the 2nd max (see section 5).
@@ -229,7 +232,10 @@ failing 8x10 model has no new-max detector at all.
   mix combines to do it at each lag.
 - **The lag of the 2nd max** is encoded less cleanly than the lag of the max
   (median spread of P(on) across steps 0.06 vs 0.02).
-- **Clock dynamics** are correlational: we haven't patched the clock neurons.
+- **The clock's internal dynamics.** Patching the clock at an intermediate
+  step carries information forward (34-41% of predictions follow it), but its
+  own on/off pattern mostly re-derives from the rest of the state. The exact
+  wiring between the clock, reference neurons and neuron 7 isn't described.
 - **Neurons 4, 8, 9, 14** have no clear role (ablation costs ≤ 2%, or 8% for
   neuron 8).
 - **No sampling-free accuracy estimate** (see above).

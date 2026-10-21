@@ -199,7 +199,29 @@ rest is spread over neurons that hold the max at particular lags (H4).
 
 **Status.** Lag code: correlational but very clean (exact 0/1 on-rates,
 step-invariant). Clock driven by the resets: causal for the reset itself
-(H5); the downstream clock dynamics are not yet causally tested.
+(H5).
+
+**Causal test of the clock** (`python scripts/clock_test.py --hidden 32 --seq-len 10`,
+`results/2nd_argmax_32x10/clock/`). Swapping the max's and 2nd max's values
+changes how long ago the max arrived, but not which positions are in the top
+two. Patch a group at an intermediate step t (after both have arrived) from
+the swapped input, then let the recurrence run on:
+
+| patched at step t | t = 4 | t = 6 | t = 8 |
+|---|---|---|---|
+| clock (3, 10, 11, 27, 28) | 34% | 38% | 41% |
+| reference (0, 6, 13, 18, 29) | 16% | 33% | 49% |
+| clock + reference | 53% | 68% | 73% |
+| clock + reference + new-max detector (7) | **85%** | **92%** | **91%** |
+| membership neurons (control) | 0% | 0% | 0% |
+
+The clock is **causal and carries information forward**: patched alone, five
+steps before the end, it still moves the prediction 34% of the time. But it
+isn't a self-contained oscillator. Its own final on/off pattern follows the
+patched source only 9-15% of the time and mostly reverts to the original
+(47-67%), so each step partly re-derives it from the rest of the state. The
+self-sustaining memory of "which input is the max" is the clock, reference
+neurons and neuron 7 together (85-92%).
 
 **Open.** The lag of the 2nd max is encoded less cleanly: P(on | lag of 2nd)
 varies more across steps (median spread 0.06 for lags ≥ 2, 90th percentile
@@ -345,7 +367,7 @@ the neuron's value explained by the ideal state plus current input
 | 12 | how far x_t is below the running 2nd max; vetoes position 9 (H6b) | causal (veto) | 0.44 | 1.00 |
 | 0, 13, 29 | reference − current input, reference switches max/2nd by lag; reset by 7 | causal (reset), correlational (role) | 0.37, 0.45, 0.46 | 0.99 |
 | 6, 18 | reference − current input, as above, not reset by 7 | correlational | 0.27, 0.20 | 0.99 |
-| 10, 11, 27 | clock: on at specific lags of the max | correlational | 0.003, 0.14, 0.07 | 0.90-0.98 |
+| 10, 11, 27 | clock: on at specific lags of the max | causal as a group with 3, 28 (`clock_test.py`) | 0.003, 0.14, 0.07 | 0.90-0.98 |
 | 24, 30 | clock: off at one lag (4, 5) | correlational | 0.08, 0.33 | 0.79 |
 | 25, 28 | clock: off only right after a reset | causal (reset) | 0.19, 0.11 | 0.89, 0.94 |
 | 3 | clock: ramps up with lag; reset by 7 and 16 | causal (reset), correlational | 0.16 | 0.94 |

@@ -18,7 +18,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch as th
@@ -27,8 +26,7 @@ from algzoo_interp import randn_inputs, run_with_cache
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.plots import heatmap, savefig
 from algzoo_interp.state import ideal_state, p_on_by_lag
-
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+from algzoo_interp.paths import RESULTS_DIR
 
 
 def coefs_by_lag(cache, state, min_count, t=None):
@@ -74,7 +72,7 @@ def main():
     with th.no_grad():
         cache = run_with_cache(model, x)
     state = ideal_state(x)
-    T, H = model.seq_len, model.hidden_size
+    H = model.hidden_size
 
     summary = {"model": name, "n_inputs": args.n}
     for which in ["lag_max", "lag_2nd"]:

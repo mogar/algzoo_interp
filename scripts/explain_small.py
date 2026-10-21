@@ -30,7 +30,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,9 +39,9 @@ from alg_zoo.tasks import task_2nd_argmax
 from algzoo_interp import get_weights, randn_inputs, run_with_cache
 from algzoo_interp.cones import enumerate_cones, exact_accuracy
 from algzoo_interp.loading import add_model_args, load_from_args
-from algzoo_interp.plots import SEQUENTIAL, savefig
+from algzoo_interp.paths import RESULTS_DIR
+from algzoo_interp.plots import savefig
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 SYM = [3, 2, 1, 0]
 PAIR_POS, PAIR_NEG = [1, 1, 0, 0], [0, 0, 1, 1]
 

@@ -28,7 +28,6 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import torch as th
 from alg_zoo import handcrafted_2nd_argmax
@@ -38,8 +37,8 @@ from algzoo_interp import get_weights, load_2nd_argmax, load_example_2nd_argmax,
 from algzoo_interp.dictionary import build_dictionary, event_agreement
 from algzoo_interp.features import events as all_events
 from algzoo_interp.state import ideal_state, p_on_by_lag, state_r2
+from algzoo_interp.paths import RESULTS_DIR
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 DEFAULT_MODELS = [
     "32x10", "32x10:s1", "32x10:s2", "32x10:s3", "32x10:s4",
     "16x10", "example", "hc10",

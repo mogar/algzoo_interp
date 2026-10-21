@@ -5,16 +5,16 @@ Writes results/zoo_baseline/{accuracy.csv,accuracy.png}.
 
 import argparse
 import csv
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
 
 from algzoo_interp import ZOO_2ND_ARGMAX_GRID, accuracy, load_2nd_argmax, randn_inputs
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import heatmap, savefig
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "zoo_baseline"
+OUT_DIR = RESULTS_DIR / "zoo_baseline"
 
 
 def main():

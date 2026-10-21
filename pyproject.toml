@@ -17,3 +17,5 @@ packages = ["algzoo_interp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["scripts: end-to-end smoke tests of scripts/ (slow; run with pytest -m scripts)"]
+addopts = "-m 'not scripts'"

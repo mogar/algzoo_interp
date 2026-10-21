@@ -15,14 +15,12 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import torch as th
 
 from algzoo_interp import get_weights, load_2nd_argmax, randn_inputs, run_with_cache
 from algzoo_interp.features import events, running_top2
-
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+from algzoo_interp.paths import RESULTS_DIR
 
 
 def named_events(x):
@@ -70,7 +68,7 @@ def main():
         cache = run_with_cache(model, x)
         w = get_weights(model)
     mask = cache.mask
-    T, H = args.seq_len, args.hidden
+    T = args.seq_len
 
     # Event detectors: for each event, the neuron whose on/off best matches it at the last step
     ev = named_events(x)

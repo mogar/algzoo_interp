@@ -7,15 +7,13 @@ Example:
 """
 
 import argparse
-from pathlib import Path
 
 import torch as th
 from alg_zoo.tasks import task_2nd_argmax
 
 from algzoo_interp import load_2nd_argmax, randn_inputs
 from algzoo_interp.cones import enumerate_cones, exact_accuracy
-
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+from algzoo_interp.paths import RESULTS_DIR
 
 
 def main():
@@ -37,6 +35,7 @@ def main():
         se = (sampled * (1 - sampled) / args.n) ** 0.5
         lines.append(f"| {h}x3 | {len(cones)} | {exact:.5f} | {sampled:.5f} | {se:.5f} | {(exact - sampled) / se:+.2f} |")
     out = RESULTS_DIR / "compare" / "exact_accuracy.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n")
     print("\n".join(lines[4:]))
 

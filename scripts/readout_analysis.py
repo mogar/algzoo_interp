@@ -39,16 +39,15 @@ Example:
 
 import argparse
 import json
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch as th
 
 from algzoo_interp import randn_inputs, run_with_cache
 from algzoo_interp.loading import add_model_args, load_from_args
+from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import heatmap, savefig
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 GROUPS = {
     "new-max detector": [7],
     "top-2 detector": [16],
