@@ -44,7 +44,7 @@ DEFAULT_MODELS = [
     "16x10", "example", "hc10",
     "8x10", "8x6", "8x5", "8x4", "4x3",
 ]
-# Key value features from the 32x10 analysis (see docs/HYPOTHESES.md §D)
+# Key value features from the 32x10 analysis (see docs/HYPOTHESES.md §F)
 KEY_FEATURES = {
     "max0-max0_prev": "new-max size (32x10: 7)",
     "max0_prev": "running max (17)",

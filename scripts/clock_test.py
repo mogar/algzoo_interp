@@ -9,7 +9,7 @@ every neuron reproduces the swapped answer exactly). Reports how often the
 final prediction moves, and whether the clock's own final on/off pattern
 follows the patched source or reverts to the original.
 
-Neuron groups default to the 32x10 seed-0 roles (docs/HYPOTHESES.md §D).
+Neuron groups default to the 32x10 seed-0 roles (docs/HYPOTHESES.md §F).
 
 Writes results/<model>/clock/summary.json.
 

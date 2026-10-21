@@ -12,8 +12,8 @@ exact accuracy uses the cone enumeration in `algzoo_interp/cones.py`, or from
 For 3 inputs, the 2nd largest is the **median**. The model computes it as
 follows:
 
-1. **The neurons form two sign-flipped pairs, (0, 1) and (2, 3), and at
-   each step one pair is on.** Which one is a comparison of consecutive
+1. **The neurons form two pairs, (0, 1) and (2, 3), that are sign-flipped
+   copies of each other (section 1), and at each step one pair is on.** Which one is a comparison of consecutive
    inputs: x0 > 0 at step 0, x1 > x0 at step 1, x2 > x1 at step 2.
 2. **The final state reduces to two numbers:** u = h0 + h3 and v = h1 + h2.
    In the common cases they are (close to) absolute values of two

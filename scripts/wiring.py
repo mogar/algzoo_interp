@@ -9,7 +9,7 @@ For the chain of per-lag membership neurons (lag 1 → 9), reports:
   neuron) and measure the downstream neuron's on/off accuracy as a top-two
   membership flag at its lag, and the model's accuracy.
 
-The chain defaults to the 32x10 seed-0 neurons (docs/HYPOTHESES.md §G).
+The chain defaults to the 32x10 seed-0 neurons (docs/HYPOTHESES.md H11).
 On/off accuracy is a crude measure for neurons whose amplitude, not on/off
 state, carries membership (26, 15).
 

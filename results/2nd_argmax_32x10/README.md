@@ -4,7 +4,8 @@ The zoo's 2nd argmax RNN with 32 hidden neurons and 10 inputs (1,376
 parameters, 99.44% accurate). It reads `x_0..x_9` one at a time and outputs a
 logit for each position, and has to point at the 2nd largest input.
 
-This write-up collects roadmap steps 1-6. Evidence for each claim is in
+This write-up collects roadmap steps 1-6. Evidence for each claim, under
+the H numbers given in section headings, is in
 [docs/HYPOTHESES.md](../../docs/HYPOTHESES.md), and every number comes from a
 script (listed under [Reproducing](#reproducing)). Neuron numbers refer to
 this model (seed 0); other seeds use different numbers for the same roles.
@@ -68,7 +69,7 @@ of its ten strong targets is zero on the next step 98-100% of the time.
 Cutting those edges shows 7 directly causes the resets of neurons 0, 13, 28
 and 29. Without its reset edges, accuracy falls from 99.5% to 67.4%.
 
-### 4. Position: a clock and a delay line for the max (H4)
+### 4. Position: a clock and lag-tagged neurons (H4)
 
 The minimal online algorithm needs the max, the 2nd max and their lags.
 Grouping inputs by (step, lag of max, lag of 2nd max) and fitting linearly in
@@ -78,8 +79,7 @@ neuron's value (21 of 32 neurons ≥ 0.9). Positions alone give 0.59.
 - **Clock.** From two steps after a new max, many neurons' on/off state depends
   only on the lag. It varies by a median of just 0.02 across steps. For
   example, neuron 27 is on exactly at lags 3 and 7, neuron 11 at lags 3, 5 and
-  9, neuron 24 is off only at lag 4, and neurons 25 and 28 are off only right
-  after a reset. It is causal: swapping which top-two input is the max and
+  9, and neuron 28 is off only right after a reset. It is causal: swapping which top-two input is the max and
   patching only the clock at step 4 moves the final prediction 34% of the time
   (`clock/summary.json`). Patching the clock together with the reference
   neurons and neuron 7 moves it 85-92%.
@@ -262,7 +262,10 @@ failing 8x10 model has no new-max detector at all.
   step carries information forward (34-41% of predictions follow it), but its
   own on/off pattern mostly re-derives from the rest of the state. The exact
   wiring between the clock, reference neurons and neuron 7 isn't described.
-- **Neurons 4, 8, 9, 14** have no clear role (ablation costs ≤ 2%, or 8% for
+- **How membership is revoked.** We know how a top-two flag enters the
+  shift register and moves along it, but not how it is cleared when its
+  input drops out of the top two.
+- **Neurons 4, 8, 9** have no clear role (ablation costs under 1%, or 8% for
   neuron 8).
 - **No sampling-free accuracy estimate** (see above).
 
@@ -277,5 +280,13 @@ python scripts/state_analysis.py --hidden 32 --seq-len 10    # state/
 python scripts/lag_codes.py --hidden 32 --seq-len 10         # lag_codes/
 python scripts/explain_32x10.py --hidden 32 --seq-len 10     # explain/
 python scripts/readout_analysis.py --hidden 32 --seq-len 10  # readout/
+python scripts/clock_test.py --hidden 32 --seq-len 10        # clock/
+python scripts/wiring.py --hidden 32 --seq-len 10            # wiring/
+python scripts/shift_test.py --hidden 32 --seq-len 10        # shift/
 python scripts/compare_models.py && python scripts/summarize_causal.py  # ../compare/
+python scripts/readout_generality.py                         # ../compare/
 ```
+
+`summarize_causal.py` needs the causal tests for seeds 1-4 first, with each
+seed's own neuron numbers. `bash scripts/run_all.sh` runs everything in the
+right order.

@@ -1,4 +1,4 @@
-"""Does the 32x10 seed-0 readout story hold for other models? (H9-H12, roadmap step 4 for §G)
+"""Does the 32x10 seed-0 readout story hold for other models? (H9-H12; docs/HYPOTHESES.md §G)
 
 For each 10-step model, without using any neuron numbers from seed 0:
 - additive position code: R² of mean final state ≈ a(max position) +

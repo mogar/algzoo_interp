@@ -29,7 +29,7 @@
    cancel the reference neurons' value-dependent part (within-cell
    correlation of their contributions to the margin).
 
-Neuron groups are the 32x10 seed-0 roles from docs/HYPOTHESES.md §D.
+Neuron groups are the 32x10 seed-0 roles from docs/HYPOTHESES.md §F.
 
 Writes results/<model>/readout/{summary.json, codes.png}.
 

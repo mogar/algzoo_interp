@@ -22,13 +22,15 @@ how many steps ago each arrived.
   run a fixed on/off sequence that encodes how long ago the max arrived.
 - **A position code and a matched filter.** On average the final state is a
   sum of a code for where the max is and a code for where the 2nd max is. A
-  delay line marks which recent inputs are in the top two, and the readout
-  picks out the 2nd-max code.
+  shift register, written by the event detectors, marks which recent inputs
+  are in the top two. A separate code says which of the two is the max, and
+  the readout picks out the 2nd-max code.
 - **Vetoes.** The two largest readout weights rule out the last position when
   it is too big (the new max) or too small (below the 2nd max).
 - **Checks.** A surrogate built only from the positions of the max and 2nd
   max reproduces all of the model's correct predictions. 80% of its errors
-  come from two identified blind spots.
+  come from two identified blind spots. Those blind spots also predict how
+  the error rate changes when a constant is added to every input.
 
 These mechanisms recur across all five training seeds. We also have a
 complete, exact explanation of a 4-neuron, 3-input model, including its exact
@@ -46,10 +48,11 @@ accuracy computed from geometry rather than sampling.
    networks are piecewise linear, and what "activation patterns" and "cones"
    are. Read this if the write-ups use terms you don't recognise.
 4. **[docs/HYPOTHESES.md](docs/HYPOTHESES.md):** the detailed evidence for
-   every claim about 32x10, including a table of every neuron's role (§D) and
-   how the findings generalise across seeds and model sizes (§E).
-5. **[docs/PLAN.md](docs/PLAN.md):** the roadmap: what has been done, how
-   explanations are judged, and what is still open.
+   every claim about 32x10, with a status table up front, a table of every
+   neuron's role (§F), and how the findings generalise across seeds and
+   model sizes (§G).
+5. **[docs/PLAN.md](docs/PLAN.md):** how explanations are judged, how far
+   each step got, and the list of open questions.
 
 ## Getting started
 

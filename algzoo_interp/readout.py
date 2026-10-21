@@ -1,6 +1,6 @@
 """Readout analyses shared by scripts/readout_analysis.py and scripts/readout_generality.py.
 
-See docs/HYPOTHESES.md §G for what these measure.
+See docs/HYPOTHESES.md §D for what these measure.
 """
 
 import torch as th

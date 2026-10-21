@@ -168,11 +168,14 @@ the input really lives on the **unit sphere** of directions, and:
   covers**, its solid angle. In the 2D picture this is just the wedge's angle
   divided by 360°.
 
-This is what makes "estimate accuracy from the mechanism" (Phase 4)
-possible in principle: accuracy is a sum over cones of the fraction of each
+This is what makes "estimate accuracy from the mechanism" (the third
+explanation check in [PLAN.md](PLAN.md#method-how-each-model-gets-analysed-and-judged)) possible in principle: accuracy is a sum over cones of the fraction of each
 cone where `M` gives the right answer, and these are geometric quantities.
 
 ## 7. How this scales, and what the coverage plots show
+
+Counts for models other than 2x2 come from `python scripts/inspect_model.py`
+(`results/<model>/inspect/summary.json`).
 
 The number of possible patterns is `2^(seq_len * hidden)`: 16 for 2x2, but
 2^320 for 32x10. Only a tiny fraction actually occurs, but for long sequences
@@ -185,6 +188,8 @@ covered?*
 |---|---|---|
 | 2x2 | 6 | 5 |
 | 4x3 | 67 | 13 |
+| handcrafted 10 | 65,851 | 39,637 |
+| example 16x10 | 174,722 | 148,508 |
 | 32x10 | 257,562 | 231,348 |
 
 For small models, a handful of cones covers almost everything, and explaining
