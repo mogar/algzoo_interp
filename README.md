@@ -29,4 +29,4 @@ Some context:
 * https://github.com/alignment-research-center/alg-zoo
 
 
-The plan is to explore these using the [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens) project.
+The plan is to explore these using the [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens) project. We will start with the 2nd argmax model. Ideally we will explain the largest model (hidden size 32), but it's ok to start with a smaller one.
