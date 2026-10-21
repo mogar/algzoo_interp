@@ -36,7 +36,7 @@ logits = W_out @ h_seq_len                    one logit per input position
 1. **Piecewise linear.** With ReLU and no biases, fixing which neurons fire
    at each step makes `h_T`, and so the logits, an exact linear function of
    `x`. The input space splits into polyhedral cones, each with one exact
-   linear map.
+   linear map. See [GEOMETRY.md](GEOMETRY.md) for a worked explanation.
 2. **Scale invariant.** For any `c > 0`, `f(c x) = c f(x)`, so the predicted
    argmax depends only on the direction of `x`. Inputs effectively live on
    the unit sphere.
