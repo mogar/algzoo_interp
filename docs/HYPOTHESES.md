@@ -174,22 +174,10 @@ the handcrafted 10-step model:
 
 The hand-built model (`handcrafted_2nd_argmax(10)`) uses a different but
 related scheme: a shift register of past inputs, plus running max and
-"max minus current" neurons. Comparing the two is part of Phase 2.
+"max minus current" neurons. Comparing the two is part of roadmap step 4 in [PLAN.md](PLAN.md#roadmap).
 
-## Next tests, in order
+## Testing
 
-1. **Causal check of H1/H2.** Patch neuron 7 (or 16) at a single step from an
-   input where the event did or didn't happen, and measure how the prediction
-   changes and which neurons respond.
-2. **H5 resets.** Measure target neurons' values at t+1 conditioned on neuron 7
-   / 16 firing at t. Then patch.
-3. **H6 veto.** Subtract the 7→logit 9 contribution and re-measure accuracy,
-   split by argmax position.
-4. **H3 memory.** Fit the always-on neurons against several quantities at once
-   (multiple regression) and test causally: does shifting neuron 17 by δ act
-   like raising the stored max by δ/slope?
-5. **H4 timing.** For the time-varying neurons, plot value against "steps
-   since last new max" and "steps since last new top-2".
-6. **Generality.** Rerun `neuron_hypotheses.py` on other seeds
-   (`--seed 0..4`, needs a flag) and on 16x10, to see whether the same roles
-   appear under different neuron numbers.
+The order in which these hypotheses get tested, alongside the rest of the
+project, lives in the roadmap in [PLAN.md](PLAN.md#roadmap). Update each
+hypothesis's **Status** here as results come in.
