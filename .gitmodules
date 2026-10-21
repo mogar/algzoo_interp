@@ -1,0 +1,3 @@
+[submodule "alg-zoo"]
+	path = alg-zoo
+	url = https://github.com/alignment-research-center/alg-zoo.git
