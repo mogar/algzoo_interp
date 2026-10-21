@@ -22,7 +22,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
-from alg_zoo import handcrafted_2nd_argmax
 from alg_zoo.tasks import task_2nd_argmax
 
 from algzoo_interp import (
@@ -33,29 +32,13 @@ from algzoo_interp import (
     activity,
     count_patterns,
     get_weights,
-    load_2nd_argmax,
-    load_example_2nd_argmax,
     randn_inputs,
     run_with_cache,
 )
+from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.plots import LINE_COLOR, heatmap, savefig, to_numpy
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
-
-
-def load(args):
-    if args.example:
-        return load_example_2nd_argmax(), "example_16x10"
-    if args.handcrafted:
-        return handcrafted_2nd_argmax(args.handcrafted), f"handcrafted_{args.handcrafted}"
-    if args.hidden is None or args.seq_len is None:
-        raise SystemExit("pass --hidden and --seq-len, or --example, or --handcrafted")
-    name = f"2nd_argmax_{args.hidden}x{args.seq_len}"
-    if args.seed is not None:
-        name += f"_seed{args.seed}"
-    if args.n_seqs is not None:
-        name += f"_nseqs{args.n_seqs}"
-    return load_2nd_argmax(args.hidden, args.seq_len, n_seqs=args.n_seqs, seed=args.seed), name
 
 
 def plot_weights(model, out):
@@ -186,17 +169,12 @@ def plot_traces(model, out, n_examples=4):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--hidden", type=int)
-    parser.add_argument("--seq-len", type=int)
-    parser.add_argument("--seed", type=int, help="training seed (default: best of 5)")
-    parser.add_argument("--n-seqs", type=int, help="checkpoint (default: fully trained)")
-    parser.add_argument("--example", action="store_true", help="blog post 16x10 model")
-    parser.add_argument("--handcrafted", type=int, choices=[2, 3, 10])
+    add_model_args(parser)
     parser.add_argument("--n", type=int, default=2**18, help="randn inputs to evaluate on")
     parser.add_argument("--n-ablation", type=int, default=2**15, help="inputs per ablation")
     args = parser.parse_args()
 
-    model, name = load(args)
+    model, name = load_from_args(args)
     model = model.eval()
     out = RESULTS_DIR / name / "inspect"
     print(f"Inspecting {name} -> {out}")

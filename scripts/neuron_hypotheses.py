@@ -20,30 +20,15 @@ from pathlib import Path
 import torch as th
 
 from algzoo_interp import get_weights, load_2nd_argmax, randn_inputs, run_with_cache
+from algzoo_interp.features import events, running_top2
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
 
-def running_top2(x):
-    """Largest and 2nd-largest values among x_0..x_t, for each t: two [batch, seq_len] tensors."""
-    top1 = x.cummax(1).values
-    top2 = th.full_like(x, float("-inf"))
-    for t in range(1, x.shape[1]):
-        top2[:, t] = x[:, : t + 1].topk(2, dim=1).values[:, 1]
-    return top1, top2
-
-
-def events(x):
-    """Boolean [batch, seq_len] events a 2nd argmax algorithm needs to notice."""
-    top1, top2 = running_top2(x)
-    # "_pos" variants also require x_t > 0, i.e. compare against max(0, ...) as
-    # the handcrafted model does; ReLU neurons with no bias get this for free
-    return {
-        "new_max": x >= top1,
-        "new_max_pos": (x >= top1) & (x > 0),
-        "new_top2": x >= top2,
-        "new_top2_pos": (x >= top2) & (x > 0),
-    }
+def named_events(x):
+    """The four running-order events (leaves out the per-lag sign events)."""
+    ev = events(x)
+    return {k: ev[k] for k in ["new_max", "new_max_pos", "new_top2", "new_top2_pos"]}
 
 
 def quantities(x):
@@ -88,7 +73,7 @@ def main():
     T, H = args.seq_len, args.hidden
 
     # Event detectors: for each event, the neuron whose on/off best matches it at the last step
-    ev = events(x)
+    ev = named_events(x)
     detectors = {}
     print("== Event detectors (agreement of neuron on/off with event) ==")
     for ev_name, e in ev.items():

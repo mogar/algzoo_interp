@@ -48,6 +48,12 @@ convention.
 It also has the largest input weight in the model (`W_ih[7]` = 8.8; the median
 |W_ih| is 0.14).
 
+**Update (dictionary, roadmap step 1).** Its *value* is pinned down too:
+`h_t[7] = max0 - max0_prev` with R² = 1.000, where `max0 = max(0, x_0..x_t)`.
+That is, it outputs how much the positive running max just increased, which is
+zero exactly when there is no new positive max. This is the same quantity as
+handcrafted neuron 19 (`results/2nd_argmax_32x10/dictionary/dictionary.md`).
+
 **Status.** Correlational. Very strong.
 
 ### H2. Neuron 16 detects a new positive top-2 value
@@ -77,9 +83,15 @@ against single candidate quantities (R² of the best straight-line fit):
 | 5 | max − 2nd max | 0.52 | max so far, 0.35 |
 | 8 | (none fits) | ≤ 0.14 | |
 
-**Status.** Correlational, partial. The single-feature fits leave a lot
-unexplained, so these neurons probably mix several quantities. Neuron 8 is
-unexplained.
+**Update (dictionary, roadmap step 1).** Pooling the fit over steps 1-9
+(rather than the last step only) and adding the `max0` convention sharpens
+neuron 17: `h_t[17] ≈ max0_prev = max(0, x_0..x_{t-1})` with R² = 0.986, the
+same quantity as handcrafted neuron 20. Neurons 5, 8 and 31 still have no
+single-feature match (best R² 0.46, 0.40, 0.64), but linear fits on all
+candidate features reach 0.93, 0.94 and 0.93.
+
+**Status.** Correlational. Neuron 17 is strong; 5, 8 and 31 look like
+mixtures of several running values.
 
 ### H4. The variable neurons encode *where*, not just *what* (speculative)
 
@@ -174,7 +186,11 @@ the handcrafted 10-step model:
 
 The hand-built model (`handcrafted_2nd_argmax(10)`) uses a different but
 related scheme: a shift register of past inputs, plus running max and
-"max minus current" neurons. Comparing the two is part of roadmap step 4 in [PLAN.md](PLAN.md#roadmap).
+"max minus current" neurons. Roadmap step 1 found the overlap is concrete:
+32x10 neurons 7 and 17 compute exactly the handcrafted running-max register
+(handcrafted neurons 19 and 20), and a linear fit on all 22 handcrafted
+neurons explains a median R² of 0.83 of each 32x10 neuron's value (0.95 for
+the 16x10 blog model). See the step 1 results in [PLAN.md](PLAN.md#roadmap). Comparing the two is part of roadmap step 4 in [PLAN.md](PLAN.md#roadmap).
 
 ## Testing
 

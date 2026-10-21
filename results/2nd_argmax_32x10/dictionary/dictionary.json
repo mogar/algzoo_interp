@@ -1,0 +1,708 @@
+{
+  "model": "2nd_argmax_32x10",
+  "n_inputs": 65536,
+  "neurons": [
+    {
+      "neuron": 0,
+      "p_active": 0.5593430995941162,
+      "best_event": "x_{t-3}>0",
+      "event_agreement": 0.598846435546875,
+      "best_value": "max0_excl(t-1)-x_t",
+      "value_r2": 0.7111526131629944,
+      "value_slope": 1.1874434041937363,
+      "value_intercept": -0.15304763611389796,
+      "multi_features": [
+        "max0_excl(t-1)-x_t",
+        "max0_excl(t-3)-x_t",
+        "steps_since_new_max_pos"
+      ],
+      "multi_r2": 0.7718023008456592,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.3714599609375,
+        "r2_all_features": 0.8385590656420159,
+        "r2_handcrafted_basis": 0.8220921266879129
+      }
+    },
+    {
+      "neuron": 1,
+      "p_active": 0.699127197265625,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.6049414873123169,
+      "best_value": "max0_prev",
+      "value_r2": 0.3576344847679138,
+      "value_slope": 1.915487479295433,
+      "value_intercept": -0.14652595269985272,
+      "multi_features": [
+        "max0_prev",
+        "relu(x_{t-1})",
+        "2nd_max_so_far"
+      ],
+      "multi_r2": 0.7413520274297414,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.2486572265625,
+        "r2_all_features": 0.9296731899338899,
+        "r2_handcrafted_basis": 0.9246830668562502
+      }
+    },
+    {
+      "neuron": 2,
+      "p_active": 0.5122087001800537,
+      "best_event": "new_top2",
+      "event_agreement": 0.6210445761680603,
+      "best_value": "relu(x_{t-6})",
+      "value_r2": 0.7357847690582275,
+      "value_slope": 2.383306523661388,
+      "value_intercept": 0.2145623953549133,
+      "multi_features": [
+        "relu(x_{t-6})",
+        "2nd_max_so_far",
+        "x_{t-4}"
+      ],
+      "multi_r2": 0.784158903658831,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.188201904296875,
+        "r2_all_features": 0.8573324051057257,
+        "r2_handcrafted_basis": 0.8258346338278447
+      }
+    },
+    {
+      "neuron": 3,
+      "p_active": 0.381622314453125,
+      "best_event": "x_{t-6}>0",
+      "event_agreement": 0.6484714150428772,
+      "best_value": "steps_since_new_max_pos",
+      "value_r2": 0.37006086111068726,
+      "value_slope": 0.1930460925332641,
+      "value_intercept": -0.12490346134651951,
+      "multi_features": [
+        "steps_since_new_max_pos",
+        "relu(x_{t-6})",
+        "max-2nd"
+      ],
+      "multi_r2": 0.42979904284184367,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.15826416015625,
+        "r2_all_features": 0.6685493289486466,
+        "r2_handcrafted_basis": 0.6457808641585814
+      }
+    },
+    {
+      "neuron": 4,
+      "p_active": 0.620880126953125,
+      "best_event": "x_{t-5}>0",
+      "event_agreement": 0.5333760380744934,
+      "best_value": "max0_excl(t-3)-x_t",
+      "value_r2": 0.1898365616798401,
+      "value_slope": 0.18454400300605922,
+      "value_intercept": 0.10412400788362924,
+      "multi_features": [
+        "max0_excl(t-3)-x_t",
+        "relu(x_{t-5})",
+        "relu(x_{t-7})"
+      ],
+      "multi_r2": 0.3334640502830837,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.0047607421875,
+        "r2_all_features": 0.6107242355053222,
+        "r2_handcrafted_basis": 0.5784631768165762
+      }
+    },
+    {
+      "neuron": 5,
+      "p_active": 0.99517822265625,
+      "best_event": "x_{t-1}>0",
+      "event_agreement": 0.5032806396484375,
+      "best_value": "max0_prev",
+      "value_r2": 0.4625374972820282,
+      "value_slope": 2.2185586683800773,
+      "value_intercept": 0.2979368183919013,
+      "multi_features": [
+        "max0_prev",
+        "2nd_max_so_far",
+        "max0_excl(t-1)-x_t"
+      ],
+      "multi_r2": 0.6738306087409417,
+      "label": "always on",
+      "extra": {
+        "ablation_drop": 0.3055419921875,
+        "r2_all_features": 0.9289832559746707,
+        "r2_handcrafted_basis": 0.9227373444827406
+      }
+    },
+    {
+      "neuron": 6,
+      "p_active": 0.7042151689529419,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5411716103553772,
+      "best_value": "max0_excl(t-1)-x_t",
+      "value_r2": 0.9011229276657104,
+      "value_slope": 1.5680730184804517,
+      "value_intercept": -0.09001164395486977,
+      "multi_features": [
+        "max0_excl(t-1)-x_t",
+        "max0_excl(t-3)-x_t",
+        "max0_prev"
+      ],
+      "multi_r2": 0.9374869775222795,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.2679443359375,
+        "r2_all_features": 0.9846229210864167,
+        "r2_handcrafted_basis": 0.983935688548552
+      }
+    },
+    {
+      "neuron": 7,
+      "p_active": 0.1940172016620636,
+      "best_event": "new_max_pos",
+      "event_agreement": 0.9993743896484375,
+      "best_value": "max0-max0_prev",
+      "value_r2": 0.9999874234199524,
+      "value_slope": 8.815049848227343,
+      "value_intercept": 0.002277264459106095,
+      "multi_features": [
+        "max0-max0_prev"
+      ],
+      "multi_r2": 0.9999873941028076,
+      "label": "event new_max_pos; value max0-max0_prev",
+      "extra": {
+        "ablation_drop": 0.8751220703125,
+        "r2_all_features": 0.9999929082236062,
+        "r2_handcrafted_basis": 0.9999909562736419
+      }
+    },
+    {
+      "neuron": 8,
+      "p_active": 0.9923384189605713,
+      "best_event": "x_{t-0}>0",
+      "event_agreement": 0.4963548481464386,
+      "best_value": "relu(x_{t-4})",
+      "value_r2": 0.40274909138679504,
+      "value_slope": 1.841293839696166,
+      "value_intercept": 1.1492628459558758,
+      "multi_features": [
+        "relu(x_{t-4})",
+        "steps_since_new_max_pos",
+        "x_{t-4}"
+      ],
+      "multi_r2": 0.6219406996531036,
+      "label": "always on",
+      "extra": {
+        "ablation_drop": 0.079833984375,
+        "r2_all_features": 0.9390122495511695,
+        "r2_handcrafted_basis": 0.7487188924692765
+      }
+    },
+    {
+      "neuron": 9,
+      "p_active": 0.2000088095664978,
+      "best_event": "x_{t-9}>0",
+      "event_agreement": 0.7454783320426941,
+      "best_value": "2nd_max_so_far",
+      "value_r2": 0.33724865317344666,
+      "value_slope": -0.1414919377120317,
+      "value_intercept": 0.13676116469299798,
+      "multi_features": [
+        "2nd_max_so_far",
+        "x_{t-0}",
+        "relu(x_{t-0})"
+      ],
+      "multi_r2": 0.421366499024862,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.002838134765625,
+        "r2_all_features": 0.5624332267088427,
+        "r2_handcrafted_basis": 0.35194292255282744
+      }
+    },
+    {
+      "neuron": 10,
+      "p_active": 0.1863335520029068,
+      "best_event": "x_{t-9}>0",
+      "event_agreement": 0.7854156494140625,
+      "best_value": "relu(x_{t-5})",
+      "value_r2": 0.17630471289157867,
+      "value_slope": 0.209805448087824,
+      "value_intercept": 0.03762963605810271,
+      "multi_features": [
+        "relu(x_{t-5})",
+        "steps_since_new_top2_pos",
+        "relu(x_{t-4})"
+      ],
+      "multi_r2": 0.2911978444616724,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.003082275390625,
+        "r2_all_features": 0.5527257315181079,
+        "r2_handcrafted_basis": 0.5046596557670775
+      }
+    },
+    {
+      "neuron": 11,
+      "p_active": 0.3543701171875,
+      "best_event": "x_{t-3}>0",
+      "event_agreement": 0.6612040400505066,
+      "best_value": "relu(x_{t-5})",
+      "value_r2": 0.4081721007823944,
+      "value_slope": 0.7907955885363478,
+      "value_intercept": 0.11053921913351886,
+      "multi_features": [
+        "relu(x_{t-5})",
+        "relu(x_{t-3})",
+        "relu(x_{t-2})"
+      ],
+      "multi_r2": 0.5288660534642144,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.137908935546875,
+        "r2_all_features": 0.8348873562289105,
+        "r2_handcrafted_basis": 0.827938003151735
+      }
+    },
+    {
+      "neuron": 12,
+      "p_active": 0.6659783124923706,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5384504795074463,
+      "best_value": "max0_excl(t-1)-x_t",
+      "value_r2": 0.787601113319397,
+      "value_slope": 2.236640128480698,
+      "value_intercept": -0.11139235373870367,
+      "multi_features": [
+        "max0_excl(t-1)-x_t",
+        "max0_excl(t-2)-x_t",
+        "max-2nd"
+      ],
+      "multi_r2": 0.8817821689659022,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.435943603515625,
+        "r2_all_features": 0.99925982608862,
+        "r2_handcrafted_basis": 0.9990208012768093
+      }
+    },
+    {
+      "neuron": 13,
+      "p_active": 0.5774773359298706,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5954064130783081,
+      "best_value": "max0_excl(t-1)-x_t",
+      "value_r2": 0.7301398515701294,
+      "value_slope": 1.3537087080483157,
+      "value_intercept": -0.1472839172332861,
+      "multi_features": [
+        "max0_excl(t-1)-x_t",
+        "max0_excl(t-7)-x_t",
+        "max0_excl(t-3)-x_t"
+      ],
+      "multi_r2": 0.7821636335398215,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.454071044921875,
+        "r2_all_features": 0.8432876790926735,
+        "r2_handcrafted_basis": 0.8292173946007725
+      }
+    },
+    {
+      "neuron": 14,
+      "p_active": 0.3522152304649353,
+      "best_event": "x_{t-1}>0",
+      "event_agreement": 0.8026631474494934,
+      "best_value": "x_{t-1}",
+      "value_r2": 0.21960917115211487,
+      "value_slope": 0.2887279732816035,
+      "value_intercept": 0.31333201933801713,
+      "multi_features": [
+        "x_{t-1}",
+        "x_{t-4}",
+        "relu(x_{t-4})"
+      ],
+      "multi_r2": 0.2711104706918084,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.020599365234375,
+        "r2_all_features": 0.5749779149107911,
+        "r2_handcrafted_basis": 0.383287139883962
+      }
+    },
+    {
+      "neuron": 15,
+      "p_active": 0.5623542070388794,
+      "best_event": "new_top2",
+      "event_agreement": 0.6877407431602478,
+      "best_value": "relu(x_{t-8})",
+      "value_r2": 0.6255341172218323,
+      "value_slope": 2.4440762231047635,
+      "value_intercept": 0.279788863744615,
+      "multi_features": [
+        "relu(x_{t-8})",
+        "2nd_max_so_far",
+        "x_{t-0}"
+      ],
+      "multi_r2": 0.6907349571728238,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.060516357421875,
+        "r2_all_features": 0.8252830872553281,
+        "r2_handcrafted_basis": 0.7696889743304717
+      }
+    },
+    {
+      "neuron": 16,
+      "p_active": 0.3325127363204956,
+      "best_event": "new_top2_pos",
+      "event_agreement": 0.9977281093597412,
+      "best_value": "relu(x_{t-0})",
+      "value_r2": 0.7326768636703491,
+      "value_slope": 3.9588237737443066,
+      "value_intercept": -0.21114250371572185,
+      "multi_features": [
+        "relu(x_{t-0})",
+        "max0-max0_prev",
+        "steps_since_new_top2_pos"
+      ],
+      "multi_r2": 0.8597068497117228,
+      "label": "event new_top2_pos",
+      "extra": {
+        "ablation_drop": 0.749786376953125,
+        "r2_all_features": 0.9073249904593922,
+        "r2_handcrafted_basis": 0.9030536731774875
+      }
+    },
+    {
+      "neuron": 17,
+      "p_active": 0.9994167685508728,
+      "best_event": "x_{t-1}>0",
+      "event_agreement": 0.4997202455997467,
+      "best_value": "max0_prev",
+      "value_r2": 0.9859135746955872,
+      "value_slope": 9.125894043378873,
+      "value_intercept": 0.06290943604843989,
+      "multi_features": [
+        "max0_prev",
+        "2nd_max_so_far",
+        "relu(x_{t-1})"
+      ],
+      "multi_r2": 0.991244879880482,
+      "label": "value max0_prev; always on",
+      "extra": {
+        "ablation_drop": 0.57476806640625,
+        "r2_all_features": 0.9981890051418338,
+        "r2_handcrafted_basis": 0.9980751770638007
+      }
+    },
+    {
+      "neuron": 18,
+      "p_active": 0.6904517412185669,
+      "best_event": "x_{t-1}>0",
+      "event_agreement": 0.5426466464996338,
+      "best_value": "max0_excl(t-2)-x_t",
+      "value_r2": 0.8298352360725403,
+      "value_slope": 1.1195242963223329,
+      "value_intercept": -0.0865416526536986,
+      "multi_features": [
+        "max0_excl(t-2)-x_t",
+        "x_{t-0}",
+        "relu(x_{t-8})"
+      ],
+      "multi_r2": 0.8867089112921306,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.194580078125,
+        "r2_all_features": 0.9717352553345843,
+        "r2_handcrafted_basis": 0.9711827418343748
+      }
+    },
+    {
+      "neuron": 19,
+      "p_active": 0.6524251103401184,
+      "best_event": "x_{t-3}>0",
+      "event_agreement": 0.6108635663986206,
+      "best_value": "relu(x_{t-3})",
+      "value_r2": 0.8026350140571594,
+      "value_slope": 1.7846170527247673,
+      "value_intercept": 0.1236311503260758,
+      "multi_features": [
+        "relu(x_{t-3})",
+        "2nd_max_so_far",
+        "x_{t-4}"
+      ],
+      "multi_r2": 0.8295904920974829,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.12518310546875,
+        "r2_all_features": 0.8739151123789224,
+        "r2_handcrafted_basis": 0.8477131979756916
+      }
+    },
+    {
+      "neuron": 20,
+      "p_active": 0.880950927734375,
+      "best_event": "x_{t-0}>0",
+      "event_agreement": 0.5889265537261963,
+      "best_value": "2nd_max_so_far",
+      "value_r2": 0.46704334020614624,
+      "value_slope": 0.8013961531988935,
+      "value_intercept": 0.5781826273462864,
+      "multi_features": [
+        "2nd_max_so_far",
+        "relu(x_{t-1})",
+        "x_{t-9}"
+      ],
+      "multi_r2": 0.6305142816666194,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.0791015625,
+        "r2_all_features": 0.83952608591499,
+        "r2_handcrafted_basis": 0.7816745663203076
+      }
+    },
+    {
+      "neuron": 21,
+      "p_active": 0.2440778911113739,
+      "best_event": "new_max_pos",
+      "event_agreement": 0.9440985918045044,
+      "best_value": "max0-max0_prev",
+      "value_r2": 0.8922502994537354,
+      "value_slope": 4.684626690423414,
+      "value_intercept": 0.12991452961400582,
+      "multi_features": [
+        "max0-max0_prev",
+        "relu(x_{t-0})",
+        "relu(x_{t-2})"
+      ],
+      "multi_r2": 0.9213466987826711,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.17791748046875,
+        "r2_all_features": 0.9393431511044168,
+        "r2_handcrafted_basis": 0.9372805308770509
+      }
+    },
+    {
+      "neuron": 22,
+      "p_active": 0.5577290654182434,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.7045983076095581,
+      "best_value": "relu(x_{t-2})",
+      "value_r2": 0.7296122908592224,
+      "value_slope": 1.719113286095784,
+      "value_intercept": 0.007522647619142388,
+      "multi_features": [
+        "relu(x_{t-2})",
+        "2nd_max_so_far",
+        "steps_since_new_max_pos"
+      ],
+      "multi_r2": 0.7725241095614069,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.3314208984375,
+        "r2_all_features": 0.8614402869996657,
+        "r2_handcrafted_basis": 0.8365416994368577
+      }
+    },
+    {
+      "neuron": 23,
+      "p_active": 0.2136145681142807,
+      "best_event": "new_max_pos",
+      "event_agreement": 0.8951008915901184,
+      "best_value": "max0-max0_prev",
+      "value_r2": 0.6695451140403748,
+      "value_slope": 4.272301631183276,
+      "value_intercept": 0.16502604505207547,
+      "multi_features": [
+        "max0-max0_prev",
+        "relu(x_{t-0})",
+        "x_{t-1}"
+      ],
+      "multi_r2": 0.7226278348360036,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.224761962890625,
+        "r2_all_features": 0.7484160230794366,
+        "r2_handcrafted_basis": 0.7401029404708561
+      }
+    },
+    {
+      "neuron": 24,
+      "p_active": 0.6670396327972412,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5673709511756897,
+      "best_value": "x_{t-4}",
+      "value_r2": 0.22712647914886475,
+      "value_slope": -0.43653365263550953,
+      "value_intercept": 0.5486939182201793,
+      "multi_features": [
+        "x_{t-4}",
+        "2nd_max_so_far",
+        "steps_since_new_top2_pos"
+      ],
+      "multi_r2": 0.5758468434459438,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.0753173828125,
+        "r2_all_features": 0.8131907874134341,
+        "r2_handcrafted_basis": 0.6965272748873677
+      }
+    },
+    {
+      "neuron": 25,
+      "p_active": 0.6345435380935669,
+      "best_event": "x_{t-3}>0",
+      "event_agreement": 0.5333540439605713,
+      "best_value": "steps_since_new_top2_pos",
+      "value_r2": 0.3125300705432892,
+      "value_slope": 0.1826736279549347,
+      "value_intercept": 0.15870660453796095,
+      "multi_features": [
+        "steps_since_new_top2_pos",
+        "2nd_max_so_far",
+        "x_{t-1}"
+      ],
+      "multi_r2": 0.6817683251480784,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.190887451171875,
+        "r2_all_features": 0.8662961893151042,
+        "r2_handcrafted_basis": 0.7914615727589323
+      }
+    },
+    {
+      "neuron": 26,
+      "p_active": 0.8046993613243103,
+      "best_event": "x_{t-0}>0",
+      "event_agreement": 0.5359598994255066,
+      "best_value": "relu(x_{t-7})",
+      "value_r2": 0.5956484079360962,
+      "value_slope": 2.802696400636473,
+      "value_intercept": 0.5906323398137613,
+      "multi_features": [
+        "relu(x_{t-7})",
+        "relu(x_{t-5})",
+        "x_{t-1}"
+      ],
+      "multi_r2": 0.6704180765175893,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.133880615234375,
+        "r2_all_features": 0.8953717775820428,
+        "r2_handcrafted_basis": 0.8632089159413885
+      }
+    },
+    {
+      "neuron": 27,
+      "p_active": 0.3034854531288147,
+      "best_event": "x_{t-9}>0",
+      "event_agreement": 0.6776699423789978,
+      "best_value": "relu(x_{t-3})",
+      "value_r2": 0.40696224570274353,
+      "value_slope": 0.7532147050603956,
+      "value_intercept": 0.03989462901611341,
+      "multi_features": [
+        "relu(x_{t-3})",
+        "relu(x_{t-7})",
+        "2nd_max_so_far"
+      ],
+      "multi_r2": 0.5849653385625331,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.067901611328125,
+        "r2_all_features": 0.8374698343905007,
+        "r2_handcrafted_basis": 0.8337779523460125
+      }
+    },
+    {
+      "neuron": 28,
+      "p_active": 0.7598080039024353,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5452541708946228,
+      "best_value": "steps_since_new_max_pos",
+      "value_r2": 0.47273918986320496,
+      "value_slope": 0.2022441378313983,
+      "value_intercept": 0.13780310945479338,
+      "multi_features": [
+        "steps_since_new_max_pos",
+        "max0",
+        "x_{t-1}"
+      ],
+      "multi_r2": 0.7117848914651507,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.108184814453125,
+        "r2_all_features": 0.8899103227057742,
+        "r2_handcrafted_basis": 0.8149308806893555
+      }
+    },
+    {
+      "neuron": 29,
+      "p_active": 0.5733235478401184,
+      "best_event": "x_{t-2}>0",
+      "event_agreement": 0.5872107744216919,
+      "best_value": "max0_excl(t-1)-x_t",
+      "value_r2": 0.7220457792282104,
+      "value_slope": 1.2963280201801557,
+      "value_intercept": -0.14771621170532603,
+      "multi_features": [
+        "max0_excl(t-1)-x_t",
+        "max0_excl(t-6)-x_t",
+        "max0_excl(t-4)-x_t"
+      ],
+      "multi_r2": 0.7936197899101155,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.4620361328125,
+        "r2_all_features": 0.8414754197935925,
+        "r2_handcrafted_basis": 0.8278025657742981
+      }
+    },
+    {
+      "neuron": 30,
+      "p_active": 0.8452555537223816,
+      "best_event": "x_{t-1}>0",
+      "event_agreement": 0.5334693193435669,
+      "best_value": "2nd_max_so_far",
+      "value_r2": 0.26398271322250366,
+      "value_slope": 0.7559990308178028,
+      "value_intercept": 0.59885400304624,
+      "multi_features": [
+        "2nd_max_so_far",
+        "x_{t-5}",
+        "max0_prev"
+      ],
+      "multi_r2": 0.6195241828861179,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.330413818359375,
+        "r2_all_features": 0.792159884061943,
+        "r2_handcrafted_basis": 0.7205712468317537
+      }
+    },
+    {
+      "neuron": 31,
+      "p_active": 0.9348127841949463,
+      "best_event": "x_{t-0}>0",
+      "event_agreement": 0.5638936161994934,
+      "best_value": "2nd_max_so_far",
+      "value_r2": 0.6434314250946045,
+      "value_slope": 3.484500888145244,
+      "value_intercept": 1.7894243707639765,
+      "multi_features": [
+        "2nd_max_so_far",
+        "max0_excl(t-1)-x_t",
+        "relu(x_{t-5})"
+      ],
+      "multi_r2": 0.7674575903935511,
+      "label": "unexplained",
+      "extra": {
+        "ablation_drop": 0.330047607421875,
+        "r2_all_features": 0.9332712642840995,
+        "r2_handcrafted_basis": 0.9264047262603212
+      }
+    }
+  ]
+}

@@ -165,20 +165,40 @@ in parallel.
 Turn the event and running-value definitions in `neuron_hypotheses.py` into
 library code, and check they recover a model whose answer we know.
 
-- [ ] `algzoo_interp/features.py`: running top-k values, events (new max,
-      new top-2, with and without the `max(0, ...)` convention), steps since
-      last event, shifted inputs `x_{t-k}`.
-- [ ] `scripts/neuron_dictionary.py`: for every neuron, best-matching event
-      and best single and multiple-regression fit of running values; writes a
-      table and figure per model. Supersedes the hard-coded parts of
-      `neuron_hypotheses.py`. Supports `--seed`, `--n-seqs`, `--example`,
-      `--handcrafted`.
-- [ ] Run on `handcrafted_2nd_argmax(10)`.
+- [x] `algzoo_interp/features.py`: running top-2 values, events (new max,
+      new top-2, with and without the `max(0, ...)` convention, sign of
+      `x_{t-k}`), steps since last event, shifted inputs `x_{t-k}`, and the
+      handcrafted "max0 excluding one input, minus current" family.
+- [x] `algzoo_interp/dictionary.py` + `scripts/neuron_dictionary.py`: for every
+      neuron, best-matching event, best single fit, greedy 3-feature fit, a fit
+      on all features at once, a fit on the handcrafted model's 22 hidden
+      states as a basis (seq_len 10), and mean-ablation accuracy drop. Writes
+      `results/<model>/dictionary/{dictionary.md, dictionary.json, r2.png}`.
+      Supports `--seed`, `--n-seqs`, `--example`, `--handcrafted`.
+      `neuron_hypotheses.py` now imports its feature code from the library.
+- [x] Run on `handcrafted_2nd_argmax(10)`: **all 22 neurons recovered with
+      R² = 1.000**, each matching its source comment (tested in
+      `tests/test_dictionary.py`).
 
-**Done when** the dictionary labels the handcrafted neurons as their source
-comments describe (shift register 0-9, the neurons 18-21 quantities, the
-"max minus current" family 10-17), giving at least R² ≈ 1 / 100% agreement
-where the definition is exact.
+In the handcrafted model's 0-indexed terms, after reading `x_t`: neuron `9-k`
+is `relu(x_{t-k})`; neuron 19 is `max0 - max0_prev` (how much the running max
+just increased); 20 is `max0_prev`; 21 is `max0 - x_t`; and neuron `19-k`
+(k = 1..9) is `max0` over everything except `x_{t-k}`, minus `x_t`. Here
+`max0 = max(0, x_0..x_t)`.
+
+**Results on the trained 10-step models** (also run in this step):
+
+| | 32x10 | 16x10 (blog example) |
+|---|---|---|
+| Neurons that exactly match one handcrafted neuron (single-feature R² ≥ 0.95) | 7 = hc 19 (1.000), 17 = hc 20 (0.986) | 4 = hc 19 (0.994), 2 = hc 20 (0.974), 7 = hc 21 (0.986), 6 = hc 18 (0.972) |
+| Linear fit on the 22 handcrafted neurons: R² ≥ 0.99 / ≥ 0.9 / median | 3 / 10 of 32 / 0.83 | 6 / 13 of 16 / 0.95 |
+| Neurons whose ablation costs ≥ 10% accuracy | 23, of which 10 have handcrafted-basis R² ≥ 0.9 | 16, of which 13 have handcrafted-basis R² ≥ 0.9 |
+
+Both trained models rebuilt the handcrafted model's running-max register
+(hc 19/20). The 16x10 model is close to a compressed version of the whole
+handcrafted scheme. The 32x10 model only partly follows it. These are linear
+fits on post-ReLU values, so they understate matches for neurons that clip at
+zero (see step 3).
 
 ### Step 2: Causal tests of the 32x10 event detectors, resets and veto (H1, H2, H5, H6)
 
@@ -204,6 +224,11 @@ HYPOTHESES.md, with the script and numbers cited.
 - [ ] **H3.** Run the step 1 dictionary on 32x10. Fit always-on neurons
       (5, 8, 17, 31) against several running values at once. Causal test:
       does shifting neuron 17 by δ act like raising the stored max?
+- [ ] **Fit pre-activations, not just values.** Each neuron is
+      `ReLU(pre_t)`, and `pre_t` is linear in `x_t` and `h_{t-1}`. Fitting
+      `pre_t` on `x_t` plus the handcrafted basis at `t-1` tests "this
+      neuron computes a ReLU of handcrafted quantities" without the clipping
+      that limits the linear fits in step 1.
 - [ ] **H4.** For neurons that are neither event detectors nor always on,
       plot value against "steps since last new max" and "steps since last new
       top-2". Find what encodes *position*.

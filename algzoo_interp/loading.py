@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import blobfile as bf
+from alg_zoo import handcrafted_2nd_argmax
 from alg_zoo.architectures import DistRNN
 from alg_zoo.loading import load_dist_rnn
 from alg_zoo.zoo import ZOO_BASEPATH, best_of_5_seed_2nd_argmax
@@ -60,3 +61,29 @@ def load_2nd_argmax(hidden_size, seq_len, *, n_seqs=None, seed=None) -> DistRNN:
 def load_example_2nd_argmax() -> DistRNN:
     """Cached equivalent of alg_zoo.example_2nd_argmax (hidden 16, seq_len 10)."""
     return load_dist_rnn(cached_path(EXAMPLE_2ND_ARGMAX_PATH), bias=False).eval()
+
+
+def add_model_args(parser):
+    """Add the standard model-selection flags to an argparse parser."""
+    parser.add_argument("--hidden", type=int)
+    parser.add_argument("--seq-len", type=int)
+    parser.add_argument("--seed", type=int, help="training seed 0-4 (default: best of 5)")
+    parser.add_argument("--n-seqs", type=int, help="checkpoint (default: fully trained)")
+    parser.add_argument("--example", action="store_true", help="blog post 16x10 model")
+    parser.add_argument("--handcrafted", type=int, choices=[2, 3, 10])
+
+
+def load_from_args(args) -> tuple[DistRNN, str]:
+    """Load the model selected by add_model_args flags; returns (model, results name)."""
+    if args.example:
+        return load_example_2nd_argmax(), "example_16x10"
+    if args.handcrafted:
+        return handcrafted_2nd_argmax(args.handcrafted).eval(), f"handcrafted_{args.handcrafted}"
+    if args.hidden is None or args.seq_len is None:
+        raise SystemExit("pass --hidden and --seq-len, or --example, or --handcrafted")
+    name = f"2nd_argmax_{args.hidden}x{args.seq_len}"
+    if args.seed is not None:
+        name += f"_seed{args.seed}"
+    if args.n_seqs is not None:
+        name += f"_nseqs{args.n_seqs}"
+    return load_2nd_argmax(args.hidden, args.seq_len, n_seqs=args.n_seqs, seed=args.seed), name
