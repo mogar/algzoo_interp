@@ -387,7 +387,6 @@
     ]
   },
   "residual": {
-    "frac_inputs_where_residual_flips_a_comparison": 0.0055980682373046875,
     "model_error_rate": 0.0055980682373046875,
     "residual_effect_over_margin_median": 0.25676103041019066,
     "residual_effect_over_margin_99pct": 2.070646179353899,

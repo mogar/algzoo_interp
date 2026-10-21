@@ -399,8 +399,10 @@ resolution for a sampling-free accuracy estimate.
   demoting the old one. Membership flags cover the other lags.
 - **Causal.** Patching 15 neurons (delay line, flags, reference, 12) moves
   the prediction to another input's 2nd-max position 80% of the time.
-- **Errors.** The value-dependent part of the state flips the readout on
-  exactly the model's 0.56% error rate.
+- **Errors.** The value-dependent part of the state usually moves the
+  decisive margin by about a quarter; errors are where it outweighs the
+  margin. Only 12.6% of it lies in the directions the readout can see
+  (random: 28%).
 
 - **The remaining 20%.** 8 more neurons (3, 4, 14, 8, 5, 21, 16, 23) take
   the 2nd-position transfer to 99.6%. The 15 fall short mainly at lags 1-2
@@ -416,6 +418,24 @@ resolution for a sampling-free accuracy estimate.
 
 **Open:** a neuron-by-neuron account of how the reference neurons' lag-dependent
 mix and the clock mark the max at each lag.
+
+### Step 6c: Completion checks
+
+- [x] **Script smoke tests** (`pytest -m scripts`) and `scripts/run_all.sh`:
+      every committed result reproduces exactly from the current code.
+- [x] **Clock causal test** (`clock_test.py`): patched alone at step 4-8,
+      the clock moves the final prediction 34-41%; with the reference neurons
+      and neuron 7, 85-92%. The clock carries information forward but
+      partly re-derives from the rest of the state.
+- [x] **Delay-line wiring** (`wiring.py`): a shift register (25 → 22 → 19 →
+      24 → 30 → 2 → 26 → 15 → 20) written by the event detectors, with link
+      signs following polarity. Most single-link cuts cost 6-16% accuracy.
+- [x] **Shift prediction** (`shift_test.py`): error rates of four blind-spot
+      classes at shift 0 predict the error at shifts −1.5 to +2 (e.g. 0.178
+      vs 0.181 at −1, 0.0082 vs 0.0085 at +2).
+- [x] **Readout generality** (`readout_generality.py`): H9-H11 hold in all
+      five 32x10 seeds (all 20 shift-register links follow the sign rule);
+      the 16x10 models fit less well.
 
 ### Step 7: Optional interactive viewer
 

@@ -1,0 +1,192 @@
+{
+  "model": "2nd_argmax_32x10",
+  "n_inputs": 262144,
+  "groups": {
+    "clock": [
+      3,
+      10,
+      11,
+      27,
+      28
+    ],
+    "reference": [
+      0,
+      6,
+      13,
+      18,
+      29
+    ],
+    "clock + reference": [
+      3,
+      10,
+      11,
+      27,
+      28,
+      0,
+      6,
+      13,
+      18,
+      29
+    ],
+    "clock + reference + max detector": [
+      3,
+      10,
+      11,
+      27,
+      28,
+      0,
+      6,
+      13,
+      18,
+      29,
+      7
+    ],
+    "membership (control)": [
+      2,
+      15,
+      19,
+      22,
+      26,
+      20,
+      24,
+      25,
+      30,
+      14
+    ],
+    "all neurons": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ]
+  },
+  "by_step": {
+    "4": {
+      "n_pairs": 57638,
+      "clock": {
+        "prediction_moves": 0.3392033033762448,
+        "final_clock_matches_source": 0.13414761095110864,
+        "final_clock_matches_original": 0.6695235781949408
+      },
+      "reference": {
+        "prediction_moves": 0.1603629549949686,
+        "final_clock_matches_source": 0.051667302821055555,
+        "final_clock_matches_original": 0.7500433741628787
+      },
+      "clock + reference": {
+        "prediction_moves": 0.525052916478712,
+        "final_clock_matches_source": 0.2644782955688955,
+        "final_clock_matches_original": 0.519726569277213
+      },
+      "clock + reference + max detector": {
+        "prediction_moves": 0.8514868663034804,
+        "final_clock_matches_source": 0.5501578819528783,
+        "final_clock_matches_original": 0.1420590582601756
+      },
+      "membership (control)": {
+        "prediction_moves": 0.00017349665151462576,
+        "final_clock_matches_source": 0.028279954196884,
+        "final_clock_matches_original": 0.8410944168777542
+      },
+      "all neurons": {
+        "prediction_moves": 1.0,
+        "final_clock_matches_source": 1.0,
+        "final_clock_matches_original": 0.010826191054512649
+      }
+    },
+    "6": {
+      "n_pairs": 120919,
+      "clock": {
+        "prediction_moves": 0.3800891505884104,
+        "final_clock_matches_source": 0.14900884062885073,
+        "final_clock_matches_original": 0.4717786286687783
+      },
+      "reference": {
+        "prediction_moves": 0.331180376946551,
+        "final_clock_matches_source": 0.05741033253665677,
+        "final_clock_matches_original": 0.6113183205286183
+      },
+      "clock + reference": {
+        "prediction_moves": 0.6830440212042772,
+        "final_clock_matches_source": 0.29809211124802554,
+        "final_clock_matches_original": 0.3180393486548847
+      },
+      "clock + reference + max detector": {
+        "prediction_moves": 0.9201779703768639,
+        "final_clock_matches_source": 0.4754587781903588,
+        "final_clock_matches_original": 0.08509828893722243
+      },
+      "membership (control)": {
+        "prediction_moves": 4.13499946245007e-05,
+        "final_clock_matches_source": 0.057178772566759566,
+        "final_clock_matches_original": 0.7059932682208752
+      },
+      "all neurons": {
+        "prediction_moves": 1.0,
+        "final_clock_matches_source": 1.0,
+        "final_clock_matches_original": 0.015837047941183766
+      }
+    },
+    "8": {
+      "n_pairs": 207910,
+      "clock": {
+        "prediction_moves": 0.40482420278004905,
+        "final_clock_matches_source": 0.08912510220768602,
+        "final_clock_matches_original": 0.49991342407772593
+      },
+      "reference": {
+        "prediction_moves": 0.48810543023423597,
+        "final_clock_matches_source": 0.03672262036458083,
+        "final_clock_matches_original": 0.5972055216199317
+      },
+      "clock + reference": {
+        "prediction_moves": 0.7273579914386032,
+        "final_clock_matches_source": 0.21655043047472464,
+        "final_clock_matches_original": 0.3710114953585686
+      },
+      "clock + reference + max detector": {
+        "prediction_moves": 0.9143571737771151,
+        "final_clock_matches_source": 0.4002116300322255,
+        "final_clock_matches_original": 0.1624212399595979
+      },
+      "membership (control)": {
+        "prediction_moves": 9.619546919340099e-06,
+        "final_clock_matches_source": 0.03778077052570824,
+        "final_clock_matches_original": 0.6808282429897552
+      },
+      "all neurons": {
+        "prediction_moves": 1.0,
+        "final_clock_matches_source": 1.0,
+        "final_clock_matches_original": 0.011452070607474388
+      }
+    }
+  }
+}

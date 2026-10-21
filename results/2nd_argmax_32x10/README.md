@@ -110,6 +110,11 @@ From `python scripts/readout_analysis.py --hidden 32 --seq-len 10`
   running max *or* the running 2nd, so they keep marking the old max after a
   new max demotes it. Neurons 25, 24, 30 and 20 flag the same for lags 1, 4,
   5 and 9 by switching off (87-94% accurate).
+- **It's a shift register.** The per-lag neurons form a chain (25 → 22 → 19
+  → 24 → 30 → 2 → 26 → 15 → 20) whose link signs follow their polarity, and
+  the event detectors write into its first neuron. Cutting single links costs
+  up to 16% accuracy, and cutting the detectors' input costs 20%
+  (`wiring/summary.json`).
 - **Causal check.** For inputs that differ only in where the 2nd max is,
   copying the final state of the delay line, membership flags, reference
   neurons and neuron 12 (15 neurons) from the other input moves the
@@ -129,8 +134,9 @@ From `python scripts/readout_analysis.py --hidden 32 --seq-len 10`
 - **Errors.** Per input, about 45% of the normalised final state depends on
   the values rather than the positions. The readout mostly ignores it: only
   12.6% of it lies in the 9 directions the readout can see, against 28% for a
-  random direction. It flips the decision on 0.56% of inputs, exactly the
-  model's error rate.
+  random direction. Typically it shifts the decisive margin by about a
+  quarter of the margin, and the model's errors are the inputs where it
+  outweighs the margin.
 
 ![position codes and readout](readout/codes.png)
 
@@ -194,6 +200,21 @@ from under 1% to about 40% as the relative gap shrinks from 1% to 0.03%:
 
 ![errors](explain/errors.png)
 
+### Predicting errors on shifted inputs
+
+Adding a constant to every input changes how often each blind spot occurs
+but not the true answer. Re-weighting the shift-0 error rates of four input
+classes by their frequency at each shift predicts the model's error closely,
+including the rise for positive shifts, where near-ties become more common
+(`python scripts/shift_test.py --hidden 32 --seq-len 10`):
+
+| shift | −1.5 | −1.0 | −0.5 | 0 | +0.5 | +1.0 | +2.0 |
+|---|---|---|---|---|---|---|---|
+| predicted error | 0.397 | 0.178 | 0.038 | 0.0056 | 0.0046 | 0.0058 | 0.0082 |
+| measured error | 0.439 | 0.181 | 0.039 | 0.0056 | 0.0038 | 0.0049 | 0.0085 |
+
+![shift](shift/shift.png)
+
 ### Accuracy estimate without sampling: not achieved
 
 - **A one-neuron error model fails.** The new-top-2 detector has a biased
@@ -220,6 +241,11 @@ Across all five 32x10 seeds (`../compare/compare.md`, `../compare/causal.md`):
 - **Varies by seed:** whether the detector is the *only* carrier of a new max,
   the importance of the top-2 detector and the resets, and whether the
   running 2nd max sits in one neuron.
+
+The readout story (additive code, matched filter, delay-line flags, a
+separate max/2nd identity code) also holds in all five seeds, and all 20
+delay-line links found follow the same sign rule
+(`../compare/readout_generality.md`).
 
 Of the other sizes, the zoo's 16x10 model works the same way. The blog's
 16x10 model resembles the handcrafted solution (no veto, no clock). The

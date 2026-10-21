@@ -145,6 +145,9 @@ weights/         downloaded checkpoints (gitignored)
 | `explain_32x10.py` | Rebuild, resample and error checks for 32x10 |
 | `readout_analysis.py` | How does the readout decode the 2nd max's position? |
 | `clock_test.py` | Does a patched clock state carry forward through the recurrence? |
+| `wiring.py` | How is the top-two delay line wired? |
+| `shift_test.py` | Do the error mechanisms predict errors on shifted inputs? |
+| `readout_generality.py` | Does the readout story hold for other seeds and sizes? |
 | `plot_regions_2d.py`, `neuron_hypotheses.py` | Figures for GEOMETRY.md, and early evidence for HYPOTHESES.md |
 | `run_all.sh` | Regenerate every committed result |
 

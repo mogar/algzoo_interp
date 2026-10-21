@@ -450,7 +450,26 @@ numbers from `python scripts/explain_32x10.py --hidden 32 --seq-len 10`.
     3% of each other (5.8% of inputs), the error rate is 3.7%, causing 38% of
     errors. 66% of all errors predict the 3rd largest.
 
-  *Status: correlational, strong.* The new-top-2 detector has a biased
+  **Prediction test on shifted inputs** (`python scripts/shift_test.py --hidden 32 --seq-len 10`,
+  `results/2nd_argmax_32x10/shift/`). Adding a constant to every input
+  leaves the true answer unchanged but changes how often each blind spot
+  occurs. Taking the error rate of each input class at shift 0 (max and 2nd
+  negative: 67%; only 2nd negative: 17.4%; relative 2nd-3rd gap < 3%: 3.6%;
+  other: 0.13%), and re-weighting by how often each class occurs at each
+  shift (computed from the inputs alone), predicts the model's error:
+
+  | shift | −1.5 | −1.0 | −0.5 | 0 | +0.5 | +1.0 | +2.0 |
+  |---|---|---|---|---|---|---|---|
+  | predicted | 0.397 | 0.178 | 0.038 | 0.0056 | 0.0046 | 0.0058 | 0.0082 |
+  | measured | 0.439 | 0.181 | 0.039 | 0.0056 | 0.0038 | 0.0049 | 0.0085 |
+
+  The prediction includes the non-obvious rise for positive shifts: larger
+  values make relative near-ties more common. With only the three classes
+  from the main analysis (max and 2nd negative not separated), large negative
+  shifts were under-predicted (0.19 vs 0.44 at −1.5), because the "both
+  negative" case is rare at shift 0 but dominant at −1.5.
+
+  *Status: correlational, strong; the shift prediction is confirmed.* The new-top-2 detector has a biased
   threshold: it fires up to about 1% below the running 2nd max. But it alone
   doesn't produce the errors: predicting them from its bias gives 8,858
   against 833 measured. Near-ties are resolved jointly by several neurons.
@@ -490,9 +509,10 @@ b(j) explains only 55% of each normalised final state). The readout largely
 ignores it, and the model errs when it doesn't.
 
 **Evidence.**
-- The value-dependent part flips some readout comparison on 0.56% of inputs,
-  exactly the model's error rate. Typically it moves the decisive margin by
-  26% (99th percentile: 207%).
+- Because the final state is exactly a(i) + b(j) plus this part, the model
+  errs exactly when it outweighs the position code's margin. That's true by
+  construction, not a test. What matters is its size: typically it moves the
+  decisive margin by 26% (99th percentile: 207%).
 - The readout can only see 9 of the 32 dimensions (those that change logit
   differences). A random direction would have 28% of its variance there; the
   value-dependent part has only 12.6%.
@@ -538,6 +558,53 @@ input is involved.
 
 **Status.** Causal: 23 neurons carry 99.6% of the 2nd max's position at the
 readout; 15 of them (delay line, flags, reference, 12) carry 80%.
+
+**Wiring: a shift register written by the event detectors**
+(`python scripts/wiring.py --hidden 32 --seq-len 10`, `results/2nd_argmax_32x10/wiring/`).
+The per-lag membership neurons form a chain, 25 → 22 → 19 → 24 → 30 → 2 →
+26 → 15 → 20 (lags 1 to 9). For most, the strongest incoming recurrent
+weight comes from the previous lag's neuron. The sign follows the
+polarity: positive between neurons of the same polarity (22 → 19 +1.19, 24
+→ 30 +0.86, 2 → 26 +0.73, 26 → 15 +0.86), negative where an "on when in" and
+an "off when in" neuron meet (25 → 22 −1.16, 19 → 24 −1.01, 30 → 2 −2.09, 15
+→ 20 −0.63). The lag-1 neuron 25 is written by the event detectors (−9.9 from
+16, −7.9 from 7). Cutting each link:
+
+| link cut | downstream flag accuracy | model accuracy |
+|---|---|---|
+| detectors 16, 7 → 25 | 0.87 → 0.72 | 99.4% → 79.9% |
+| 25 → 22 | 0.83 → 0.50 | 99.2% |
+| 22 → 19 | 0.71 → 0.47 | 86.6% |
+| 19 → 24 | 0.91 → 0.72 | 91.8% |
+| 24 → 30 | 0.93 → 0.94 (no effect) | 99.1% |
+| 30 → 2 | 0.81 → 0.27 | 83.1% |
+| 2 → 26 | (26's on/off isn't a flag) | 93.3% |
+| 26 → 15 | (15's on/off isn't a flag) | 89.5% |
+| 15 → 20 | 0.94 → 0.80 | 92.2% |
+
+So the delay line is the handcrafted model's shift-register idea, applied to
+event flags rather than raw inputs. Two links are redundant (25 → 22 for
+accuracy, 24 → 30 entirely). How membership is *revoked* when an input drops
+out of the top two isn't worked out.
+
+### Generality of H9-H11 across models
+
+From `python scripts/readout_generality.py` (`results/compare/readout_generality.md`).
+No seed-0 neuron numbers are used: flags and greedy sets are found per model.
+
+- **All five 32x10 seeds** have the additive code (R² 0.95-0.96, surrogate
+  agreeing with the model on all its correct inputs), a matched filter with a
+  positive margin at every position (minimum 0.46-0.87), a residual mostly
+  hidden from the readout (7-13% in the readout's view vs 28% for a random
+  direction), and clear membership flags for 5-7 of 9 lags. **All 20
+  shift-register links found follow the polarity sign rule.** The membership
+  flags carry at most 3% of the max/2nd identity, and 7-10 neurons carry 90%
+  of it.
+- **The 16x10 models fit less well.** In the zoo's 16x10, the surrogate
+  agrees with the model on only 83% of inputs (accuracy 95%), only 3 lags
+  have clear flags, and identity is spread over 15 of 16 neurons. The blog
+  16x10 has the additive code (surrogate 95%) but also spreads identity over
+  15 neurons.
 
 ### H12. Which top-two input is the max is a separate code, carried by the reference neurons and the clock
 

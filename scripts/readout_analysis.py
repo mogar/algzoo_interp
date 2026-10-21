@@ -7,8 +7,8 @@
    (max position i, 2nd position j) cell fits a(i) + b(j). Report R², whether
    the readout decodes j from the fit, and the logit tables A = W a, B = W b.
 3. Value-dependent residual: per input, the normalised final state minus
-   a(i) + b(j). How often it flips a readout comparison (vs the error rate),
-   and how much of it lies in the readout-visible subspace (directions that
+   a(i) + b(j). Its typical effect on the decisive margin relative to the
+   margin, and how much of it lies in the readout-visible subspace (directions that
    change logit differences) vs a random direction.
 4. Top-2 delay line: P(neuron on | the input k steps ago is the running max /
    running 2nd / neither), for the delay neurons; and, for every lag, the best
@@ -47,6 +47,7 @@ from algzoo_interp import randn_inputs, run_with_cache
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.paths import RESULTS_DIR
 from algzoo_interp.plots import heatmap, savefig
+from algzoo_interp.readout import additive_codes, greedy, membership_flags
 
 GROUPS = {
     "new-max detector": [7],
@@ -76,42 +77,6 @@ def run(model, n, seed):
         c = run_with_cache(model, x)
     order = x.argsort(-1, descending=True)
     return x, c, order[:, 0], order[:, 1]
-
-
-def additive_codes(h, p1, p2, T):
-    """Weighted least-squares fit of per-cell mean states: mu(i, j) ≈ a(i) + b(j)."""
-    cell = p1 * T + p2
-    cnt = th.bincount(cell, minlength=T * T).double()
-    mu = th.zeros(T * T, h.shape[1], dtype=th.float64).index_add_(0, cell, h) / cnt.clamp(min=1)[:, None]
-    I, J = th.arange(T * T) // T, th.arange(T * T) % T
-    cells = th.where(I != J)[0]
-    X = th.zeros(len(cells), 2 * T, dtype=th.float64)
-    X[th.arange(len(cells)), I[cells]] = 1
-    X[th.arange(len(cells)), T + J[cells]] = 1
-    w = cnt[cells].sqrt()[:, None]
-    coef = th.linalg.lstsq(X * w, mu[cells] * w).solution
-    fit = X @ coef
-    wmean = (cnt[cells][:, None] * mu[cells]).sum(0) / cnt[cells].sum()
-    r2 = 1 - (cnt[cells][:, None] * (mu[cells] - fit) ** 2).sum() / (cnt[cells][:, None] * (mu[cells] - wmean) ** 2).sum()
-    return coef[:T], coef[T:], r2.item()
-
-
-def greedy(h, h_src, W, target, ok, start, steps):
-    """Greedily add neurons to the patched set, maximising how often the prediction moves to `target`."""
-    chosen, curve = list(start), []
-    for _ in range(steps):
-        best = None
-        for n in range(h.shape[1]):
-            if n in chosen:
-                continue
-            hp = h.clone()
-            hp[:, chosen + [n]] = h_src[:, chosen + [n]]
-            v = (((hp @ W.T).argmax(-1) == target)[ok]).double().mean().item()
-            if best is None or v > best[0]:
-                best = (v, n)
-        chosen.append(best[1])
-        curve.append({"add": best[1], "moved": best[0]})
-    return curve
 
 
 def main():
@@ -182,7 +147,6 @@ def main():
     shift = Lr.gather(1, p2[:, None]) - Lr
     others = th.ones_like(Ls, dtype=th.bool)
     others.scatter_(1, p2[:, None], False)
-    flips = ((-shift > marg) & others).any(1)
     other_ls = Ls.masked_fill(~others, -float("inf"))
     ru = other_ls.argmax(-1)
     rel = (shift.gather(1, ru[:, None])[:, 0].abs() / marg.gather(1, ru[:, None])[:, 0])
@@ -191,7 +155,6 @@ def main():
     U = U[:, sv > 1e-8 * sv[0]]
     share = lambda v: (((v @ U) ** 2).sum() / (v ** 2).sum()).item()  # noqa: E731
     S["residual"] = {
-        "frac_inputs_where_residual_flips_a_comparison": flips.double().mean().item(),
         "model_error_rate": (pred != p2).double().mean().item(),
         "residual_effect_over_margin_median": rel.median().item(),
         "residual_effect_over_margin_99pct": rel.quantile(0.99).item(),
@@ -215,27 +178,7 @@ def main():
                 counts[key][1] += int(sel.sum())
         delay[n] = {"lag": k, **{f"p_on_if_{key}": v[0] / max(v[1], 1) for key, v in counts.items()}}
     S["delay_line"] = delay
-    flags = {}
-    mask = c.mask.double()
-    for k in range(1, T):
-        on_in, n_in = th.zeros(model.hidden_size, dtype=th.float64), 0
-        on_out, n_out = th.zeros(model.hidden_size, dtype=th.float64), 0
-        for t in range(k, T):
-            o = x[:, : t + 1].argsort(-1, descending=True)
-            inn = (o[:, 0] == t - k) | (o[:, 1] == t - k)
-            on_in += mask[inn, t].sum(0)
-            n_in += int(inn.sum())
-            on_out += mask[~inn, t].sum(0)
-            n_out += int((~inn).sum())
-        p_in, p_out = on_in / n_in, on_out / max(n_out, 1)
-        frac = n_in / (n_in + n_out)
-        acc_on = frac * p_in + (1 - frac) * (1 - p_out)
-        acc = th.maximum(acc_on, 1 - acc_on)
-        best = int(acc.argmax())
-        flags[k] = {"neuron": best, "polarity": "on-when-in" if acc_on[best] >= 0.5 else "off-when-in",
-                    "p_on_if_in_top2": p_in[best].item(), "p_on_if_not": p_out[best].item(),
-                    "accuracy": acc[best].item(), "majority_baseline": max(frac, 1 - frac)}
-    S["membership_flags_by_lag"] = flags
+    S["membership_flags_by_lag"] = membership_flags(c)
 
     # 5. patch groups between inputs that differ only in the 2nd max's position
     gen = th.Generator().manual_seed(3)
