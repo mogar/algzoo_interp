@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "algzoo-interp"
+version = "0.0.1"
+description = "Mechanistic interpretability experiments on AlgZoo models"
+requires-python = ">=3.10"
+dependencies = ["alg-zoo", "torch", "matplotlib"]
+
+[tool.setuptools]
+packages = ["algzoo_interp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
