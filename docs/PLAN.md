@@ -115,7 +115,8 @@ First observations (2^18 randn inputs):
   not region-by-region ones.
 - 4x3: the neurons form two sign-flipped pairs, (0, 3) and (1, 2), and the
   active pair alternates between steps.
-- 32x10: `W_hh` is mostly near zero apart from strong negative columns from
+- 32x10: see [HYPOTHESES.md](HYPOTHESES.md) for neuron-role hypotheses and
+  how we plan to test them. In brief: `W_hh` is mostly near zero apart from strong negative columns from
   neurons 7 and 16, which inhibit many other neurons. Neuron 7 also has the
   largest input weight and a large negative weight on logit 9. Ablating 7,
   16 or 17 costs 60-90% accuracy. Ablating 9 or 10 costs almost nothing, and
