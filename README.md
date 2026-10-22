@@ -58,6 +58,9 @@ accuracy computed from geometry rather than sampling.
    model sizes (§G).
 5. **[docs/PLAN.md](docs/PLAN.md):** how explanations are judged, how far
    each step got, and the list of open questions.
+6. **[docs/LESSONS.md](docs/LESSONS.md):** what carries over to other
+   networks: general lessons for mechanistic interpretability, each with
+   the example from this project that taught it.
 
 ## Getting started
 
