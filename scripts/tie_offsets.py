@@ -19,7 +19,13 @@
    position cell: the cell's mean; affine in max/mid, 4th/mid and
    last/mid; and linear in all ten inputs over mid (held out on half the
    inputs).
-4. The last input integrated out. The exact error rate given x_0..x_8,
+4. The last-step vote. For prefixes x_0..x_8 with a positive 2nd largest
+   r2, it finds the exact x_9 where logit 9 overtakes the logit of the
+   prefix's 2nd (bisection on the last step alone), and compares it with
+   each neuron's step-9 threshold θ_i = -W_hh[i]·h_8 / W_ih[i]. Near the
+   crossing the switch point is a weighted vote Σ π_i θ_i over the neurons
+   that are on.
+5. The last input integrated out. The exact error rate given x_0..x_8,
    integrated over x_9 in three pieces with constant true answers (below the
    running 2nd, between, above the max). It reports how much variance is left
    compared with 0/1 sampling.
@@ -35,7 +41,7 @@ import json
 
 import torch as th
 
-from algzoo_interp import get_weights, randn_inputs
+from algzoo_interp import get_weights, randn_inputs, run_with_cache
 from algzoo_interp.estimation import errors_on
 from algzoo_interp.lines import _run, line_error_mass, tie_lines
 from algzoo_interp.loading import add_model_args, load_from_args
@@ -145,6 +151,43 @@ def offset_predictability(model, n, seed):
     return out
 
 
+def last_step_vote(model, n, seed, neurons=(12, 16, 7, 0, 6, 13, 18, 29)):
+    T = model.seq_len
+    x = randn_inputs(n, T, seed=seed, dtype=th.float64)
+    wts = get_weights(model)
+    W_ih, W_hh, W_out = (m.detach().double() for m in (wts.W_ih, wts.W_hh, wts.W_out))
+    W_ih = W_ih.reshape(-1)
+    with th.no_grad():
+        h_prev = run_with_cache(model, x).h[:, T - 2]
+    order = x[:, :-1].argsort(-1, descending=True)
+    r1, r2 = x.gather(1, order[:, :1])[:, 0], x.gather(1, order[:, 1:2])[:, 0]
+    keep = r2 > 0.1
+    h_prev, r1, r2, p2 = h_prev[keep], r1[keep], r2[keep], order[keep, 1]
+    rows = th.arange(len(r2))
+    base = h_prev @ W_hh.T
+
+    def diff(x_last):  # logit of the last position minus logit of the prefix's 2nd
+        L = th.relu(x_last[:, None] * W_ih + base) @ W_out.T
+        return L[:, T - 1] - L[rows, p2]
+
+    lo, hi = r2 * 0.95, th.minimum(r2 * 1.05, r1)
+    clean = (diff(lo) < 0) & (diff(hi) > 0)
+    a, b = lo.clone(), hi.clone()
+    for _ in range(80):
+        c = (a + b) / 2
+        below = diff(c) < 0
+        a, b = th.where(below, c, a), th.where(below, b, c)
+    switch = ((a + b) / 2 - r2) / r2
+    theta = (-base / W_ih - r2[:, None]) / r2[:, None]
+    q = switch[clean].quantile(th.tensor([0.25, 0.5, 0.75], dtype=th.float64)).tolist()
+    return {"n_prefixes": int(clean.sum()), "clean_crossing_fraction": clean.double().mean().item(),
+            "switch_offset_quartiles": q,
+            "neurons": {str(i): {"threshold_offset_median": theta[clean, i].median().item(),
+                                 "corr_with_switch_offset": th.corrcoef(th.stack([switch[clean],
+                                                                                   theta[clean, i]]))[0, 1].item()}
+                        for i in neurons}}
+
+
 def last_input_section(model, n, seed):
     T = model.seq_len
     x = randn_inputs(n, T, seed=seed, dtype=th.float64)
@@ -184,6 +227,7 @@ def main():
     print(f"Tie offsets for {name} -> {out}")
     S = {"model": name, "tie_lines": tie_lines_section(model, args.n, seed=31),
          "offset_predictability": offset_predictability(model, 2 * args.n, seed=51),
+         "last_step_vote": last_step_vote(model, args.n, seed=61),
          "last_input": last_input_section(model, args.n_last, seed=41)}
     (out / "summary.json").write_text(json.dumps(S, indent=2))
     t, li = S["tie_lines"], S["last_input"]
@@ -195,6 +239,10 @@ def main():
         print(f"  {r['case']:24s} B last={r['B_is_last']!s:5s} P {r['prob']:.3f} share {r['share_of_tie_error']:.3f} "
               f"mean {r['mean']:.5f} lean→B quartiles {[round(v, 5) for v in r['lean_toward_B_quartiles']]}")
     print(f"  offset predictability: {S['offset_predictability']}")
+    v = S["last_step_vote"]
+    print(f"  last-step switch offset quartiles {[round(q, 5) for q in v['switch_offset_quartiles']]}; "
+          + ", ".join(f"n{i}: θ {d['threshold_offset_median']:+.4f} r {d['corr_with_switch_offset']:+.3f}"
+                      for i, d in v["neurons"].items()))
     print(f"  last input integrated: mean {li['mean']:.5f} ± {li['mean_se']:.5f} (plain {li['plain_mean']:.5f}); "
           f"variance reduction {li['variance_reduction']:.2f}x; {li['by_piece']}")
 

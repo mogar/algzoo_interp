@@ -85,6 +85,49 @@
     "r2_affine_in_3_ratios": 0.3335873845040277,
     "r2_linear_in_all_inputs_held_out": 0.44530204176281485
   },
+  "last_step_vote": {
+    "n_prefixes": 241865,
+    "clean_crossing_fraction": 0.9554141385412717,
+    "switch_offset_quartiles": [
+      -0.003270995529488566,
+      0.0004891621522862436,
+      0.004412843506886997
+    ],
+    "neurons": {
+      "12": {
+        "threshold_offset_median": 0.03130630786799839,
+        "corr_with_switch_offset": 0.05512383207464221
+      },
+      "16": {
+        "threshold_offset_median": -0.015424471775686848,
+        "corr_with_switch_offset": 0.014270521619526426
+      },
+      "7": {
+        "threshold_offset_median": 0.4673164205018123,
+        "corr_with_switch_offset": 0.050920835714650725
+      },
+      "0": {
+        "threshold_offset_median": 0.09911643690412233,
+        "corr_with_switch_offset": 0.01006851917112008
+      },
+      "6": {
+        "threshold_offset_median": 0.10224812175249234,
+        "corr_with_switch_offset": 0.041719026101943085
+      },
+      "13": {
+        "threshold_offset_median": 0.1994059073560958,
+        "corr_with_switch_offset": 0.011003313862329552
+      },
+      "18": {
+        "threshold_offset_median": -0.05683793241104748,
+        "corr_with_switch_offset": -0.02926789447506041
+      },
+      "29": {
+        "threshold_offset_median": 0.09635777510255783,
+        "corr_with_switch_offset": 0.010089229321863026
+      }
+    }
+  },
   "last_input": {
     "n": 65536,
     "mean": 0.005438663476484232,

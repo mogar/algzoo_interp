@@ -393,6 +393,16 @@ versus compute.
   is below the running 2nd: those errors are already fixed by the first
   nine inputs.
 
+- **The last step is a vote, not a threshold.** For a prefix whose 2nd
+  largest is r2, the x_9 at which logit 9 overtakes the prefix's 2nd sits
+  within about ±0.4% of r2 (quartiles −0.33%, +0.05%, +0.44%). It is
+  uncorrelated with every single neuron's step-9 threshold (|r| ≤ 0.06).
+  Neuron 12's threshold sits 3.1% above r2, and neuron 16's 1.5% below.
+  Near the crossing the switch point is Σ_i π_i θ_i, a weighted vote over
+  the thresholds of all active neurons, with π_i ∝ (W_out[9] − W_out[A])_i
+  W_ih[i]. So the model reads off the running 2nd by cancellation across
+  many neurons, and the offset is what's left of that cancellation.
+
 **What this means for E3.** The near-tie error is the leftover imprecision of
 many neurons. It isn't one biased threshold, so it can't be derived as a
 handful of per-case constants. Candidate routes, still to be chosen:
@@ -413,6 +423,13 @@ handful of per-case constants. Candidate routes, still to be chosen:
    multiply-adds), if the estimate is much cheaper than that. That would
    make routes 1 and E4 worth scoring even if they are only accurate to
    10-20%.
+
+**Route 1 has a precision problem.** It was chosen, but the last-step vote
+shows what it would need: the spread of an offset that is about 0.4% of
+the value. The explanation's per-neuron state model leaves about a quarter
+of each neuron's standard deviation unexplained, so propagating its moments
+can't reach that precision without first explaining the leftover
+cancellation error itself.
 
 **Step 13: E4, the negative-value blind spot, and the full estimate.**
 - [ ] Derive what the model predicts when the 2nd largest (or the max) is
