@@ -237,6 +237,12 @@ are the target; E1 and E2 are stepping stones.**
 | E3 | δ predicted from the weights through the explanation (top-2 detector bias, neuron 12, readout margins), integrated over the order-statistic distribution | deductive |
 | E4 | a mechanistic model of the max(0, …) blind spot: what the model predicts when the 2nd largest is negative | deductive |
 
+**Housekeeping.**
+- [ ] Split `scripts/run_all.sh` into an explanatory phase (steps 1-6:
+      dictionary, causal tests, readout and so on) and a challenge phase
+      (steps 9-13: the estimation harness and estimators), so each can be
+      rerun on its own.
+
 **Step 9: scoring harness — done.**
 - [x] `algzoo_interp/estimation.py`: a family of noisy-weight copies
       (`w + σ·|w|·ε`), high-precision ground-truth error for each copy
@@ -263,11 +269,36 @@ far below it.
   that compute has an MSE of about 2.5×10⁻⁵. The sampled ground truths
   agree with the exact values to within their standard errors.
 
-**Step 10: E1, exact class probabilities.**
-- [ ] Analytic probabilities for the classes in H8: 2nd largest negative,
-      both max and 2nd negative, and near-tie bands. The error within each
-      class is still sampled.
-- [ ] Measure how much of the sampling variance the split removes.
+**Step 10: E1, exact class probabilities — done.**
+- [x] `algzoo_interp/order_stats.py`: exact probabilities of cells of 10
+      Gaussian inputs, from a 1-D integral over the 2nd largest, with exact
+      conditional samplers. There are 92 cells: max < 0, only the 2nd < 0,
+      and a grid over the relative gaps g12 = (max − 2nd)/max and
+      g23 = (2nd − 3rd)/2nd.
+- [x] E1 (`Stratified` in `estimation.py`), scored by the harness. The
+      budget is split across cells by a fixed Neyman allocation from a pilot
+      on the unperturbed model.
+
+**Outcome** (`results/2nd_argmax_32x10/estimation/{summary.json, cells.md}`):
+- **E1 beats sampling by 4.4-7.5× in MSE** at every budget, on the noisy
+  family as well as the original. The pilot predicted 5.7×.
+- **A third blind spot.** With the classes in H8 alone, the gain would be
+  only about 2.8×. The rest comes from splitting on g12: near-ties between
+  the max and the 2nd also cause errors. The model then predicts the max's
+  position, which fits finite resolution in the identity code (H12).
+- **Where the error is,** from the unperturbed model's cell rates:
+
+  | errors | share |
+  |---|---|
+  | negative values | 41% |
+  | 2nd-3rd near-ties (g23 < 0.03) | 39% |
+  | max-2nd near-ties only (g12 < 0.01, g23 ≥ 0.03; 1.6% of inputs) | 14% |
+  | none of these | 6% |
+
+- **What limits E1.** The two negative cells hold 41% of the error, and
+  E1 can't split them further without a mechanism (E4). Within the
+  near-tie cells the error is still a coin flip per sample, which is what
+  E2 and E3 remove.
 
 **Step 11: E2, exact error along the tie direction.**
 - [ ] For a sampled input, walk the line through it along `x_j − x_k`

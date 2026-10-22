@@ -195,7 +195,12 @@ most of them fall:
 
 Among errors, the median gap between the 2nd and 3rd largest is 0.018,
 against 0.258 overall, while the gap between max and 2nd max is typical
-(0.32 vs 0.41). 66% of errors predict the 3rd largest. The error rate rises
+(0.32 vs 0.41). 66% of errors predict the 3rd largest.
+
+Most of the remaining 20% are a third blind spot: near-ties between the max
+and the 2nd, where the model points at the max. Splitting inputs into exact
+cells by both gaps (`estimation/cells.md`) puts 41% of errors on negative
+values, 39% on 2nd-3rd near-ties, 14% on max-2nd near-ties, and 6% elsewhere. The error rate rises
 from under 1% to about 40% as the relative gap shrinks from 1% to 0.03%:
 
 ![errors](explain/errors.png)

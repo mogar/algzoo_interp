@@ -26,7 +26,7 @@ inputs, but we haven't shown the model *uses* it that way.
 | [H6](#h6-neuron-7-vetoes-position-9) | Neuron 7 → logit 9 vetoes the last position when it is the new max | causal |
 | [H6b](#h6b-neuron-12-vetoes-position-9-when-x_9-is-too-small) | Neuron 12 → logit 9 vetoes the last position when it is below the 2nd max | causal |
 | [H7](#h7-why-the-important-weights-are-the-large-ones) | Large weights implement the discrete logic | rationale, not a test |
-| [H8](#h8-errors-come-from-two-blind-spots) | Errors come from two blind spots: negative values and near-ties | correlational; predicts errors on shifted inputs |
+| [H8](#h8-errors-come-from-three-blind-spots) | Errors come from three blind spots: negative values, 2nd-3rd near-ties and max-2nd near-ties | correlational; predicts errors on shifted inputs |
 | [H9](#h9-the-final-state-is-an-additive-position-code-read-by-a-matched-filter) | The final state is an additive position code, read by a matched filter | correlational, plus surrogate test |
 | [H10](#h10-errors-are-value-dependent-noise-overwhelming-the-position-margin) | Errors are value-dependent noise that outweighs the position margin | correlational |
 | [H11](#h11-a-top-two-shift-register-carries-the-2nd-maxs-position) | A top-two shift register carries the 2nd max's position | causal |
@@ -48,6 +48,7 @@ Every number below comes from one of these scripts, run with
 | `clock_test.py` | `clock/summary.json` | clock patching (H4) |
 | `explain_32x10.py` | `explain/summary.json` | surrogate, resample and error analysis (H8) |
 | `shift_test.py` | `shift/summary.json` | error prediction on shifted inputs (H8) |
+| `estimation_harness.py` | `estimation/{cells.md, summary.json}` | error by exact cell, including max-2nd near-ties (H8) |
 | `readout_analysis.py` | `readout/summary.json` | readout codes and patching (H9-H12) |
 | `wiring.py` | `wiring/summary.json` | shift-register weights and link cuts (H11) |
 | `compare_models.py`, `summarize_causal.py` (no flags) | `results/compare/{compare,causal}.md` | other seeds and sizes (§G) |
@@ -510,12 +511,14 @@ the reference neurons and the clock.
 
 ## E. Errors
 
-### H8. Errors come from two blind spots
+### H8. Errors come from three blind spots
 
-**Claim.** Most errors come from two mechanisms. First, comparisons are
+**Claim.** Most errors come from three mechanisms. First, comparisons are
 against running values clipped at 0 (the max(0, …) convention in H1-H3), so
 negative values can't be ranked. Second, comparisons have finite relative
-resolution, so near-ties between the 2nd and 3rd largest are missed.
+resolution, so near-ties between the 2nd and 3rd largest are missed. Third,
+the same finite resolution applies to which top-two input is the max (H12),
+so near-ties between the max and the 2nd are missed too.
 
 **Evidence** (`explain_32x10.py`, 2^20 inputs):
 
@@ -526,6 +529,20 @@ resolution, so near-ties between the 2nd and 3rd largest are missed.
 | everything else | 93.2% | 0.12% | 20% |
 
 66% of all errors predict the 3rd largest.
+
+**The third blind spot** (`estimation_harness.py`, `cells.md`). Splitting
+inputs into exact cells by both relative gaps, g12 = (max − 2nd)/max and
+g23 = (2nd − 3rd)/2nd, accounts for most of the errors left in "everything
+else" above:
+
+| errors | share |
+|---|---|
+| negative values | 41% |
+| 2nd-3rd near-ties (g23 < 0.03) | 39% |
+| max-2nd near-ties only (g12 < 0.01, g23 ≥ 0.03; 1.6% of inputs) | 14% |
+| none of these | 6% |
+
+In the max-2nd near-ties, errors mostly predict the max's position.
 
 **Predicting errors on shifted inputs** (`shift_test.py`). Adding a constant
 to every input leaves the true answer unchanged, but changes how often each
@@ -554,7 +571,9 @@ threshold is biased: it fires up to about 1% below the running 2nd max. But
 predicting errors from that bias alone gives 8,858 errors against 833
 measured, so several neurons resolve near-ties together.
 
-**Status.** Correlational; the shift prediction is confirmed.
+**Status.** Correlational; the shift prediction is confirmed. The max-2nd
+near-tie blind spot was found during step 10 and isn't in the shift test's
+classes.
 
 ## F. Neuron roles in 32x10
 

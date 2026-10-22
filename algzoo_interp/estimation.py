@@ -10,7 +10,9 @@ the pieces:
 - `true_error`: a high-precision sampled error rate, the ground truth;
 - `sampling_estimate`: the baseline estimator (E0);
 - `score`: MSE of an estimator over a family, with the ground truth's own
-  sampling variance subtracted.
+  sampling variance subtracted;
+- `Stratified`: E1, exact cell probabilities times the error sampled within
+  each cell (algzoo_interp.order_stats).
 
 Compute is counted in multiply-adds (MACs). Every estimator takes
 (model, budget, seed) and returns (estimate, macs), where `budget` is the
@@ -24,6 +26,7 @@ import torch as th
 from alg_zoo.tasks import task_2nd_argmax
 
 from .data import randn_inputs
+from .order_stats import sample_cell
 
 
 def forward_macs(model):
@@ -96,3 +99,42 @@ def score(estimates, truths, truth_vars):
     raw = ((e - t) ** 2).mean().item()
     floor = v.mean().item()
     return raw - floor, floor
+
+
+class Stratified:
+    """E1: Σ_c P(c) × (error rate on n_c inputs sampled within cell c).
+
+    P(c) is exact (algzoo_interp.order_stats) and only the error within each cell
+    is sampled. The budget is split across cells in proportion to `weights`;
+    every cell gets at least one input, so the estimate is unbiased for any
+    weights. Neyman allocation, weights ∝ P(c) sqrt(p_c (1 - p_c)), minimises
+    the variance.
+    """
+
+    def __init__(self, cells, probs, weights, n):
+        self.cells, self.probs, self.n = cells, probs, n
+        total = sum(weights)
+        self.weights = [w / total for w in weights]
+
+    def allocation(self, budget):
+        return [max(1, int(budget * w)) for w in self.weights]
+
+    def __call__(self, model, budget, seed):
+        gen = th.Generator().manual_seed(seed)
+        est, used = 0.0, 0
+        for c, P, m in zip(self.cells, self.probs, self.allocation(budget)):
+            est += P * errors_on(model, sample_cell(c, self.n, m, gen)).mean().item()
+            used += m
+        return est, used * forward_macs(model)
+
+
+def neyman_weights(model, cells, probs, n, per_cell, seed=0):
+    """Pilot error rate in each cell (add-one smoothed) and the Neyman weights from it."""
+    gen = th.Generator().manual_seed(seed)
+    rates, weights = [], []
+    for c, P in zip(cells, probs):
+        k = errors_on(model, sample_cell(c, n, per_cell, gen)).sum().item()
+        p = (k + 1) / (per_cell + 2)
+        rates.append(k / per_cell)
+        weights.append(P * (p * (1 - p)) ** 0.5)
+    return rates, weights

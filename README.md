@@ -28,9 +28,10 @@ how many steps ago each arrived.
 - **Vetoes.** The two largest readout weights rule out the last position when
   it is too big (the new max) or too small (below the 2nd max).
 - **Checks.** A surrogate built only from the positions of the max and 2nd
-  max reproduces all of the model's correct predictions. 80% of its errors
-  come from two identified blind spots. Those blind spots also predict how
-  the error rate changes when a constant is added to every input.
+  max reproduces all of the model's correct predictions. 94% of its errors
+  fall in three identified blind spots: negative values, and two kinds of
+  near-tie. The first two also predict how the error rate changes when a
+  constant is added to every input.
 
 These mechanisms recur across all five training seeds. We also have a
 complete, exact explanation of a 4-neuron, 3-input model, including its exact
