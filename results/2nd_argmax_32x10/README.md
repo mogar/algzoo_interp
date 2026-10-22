@@ -40,6 +40,13 @@ many steps ago each arrived.
    clipped at 0, which a ReLU without biases gets for free. This is also the
    model's main blind spot.
 
+The errors (0.56%) come from three blind spots: negative values, 2nd-3rd
+near-ties and max-2nd near-ties. In all three, the decision is perturbed by
+inputs that shouldn't matter, through many neurons at once. That crosstalk
+is why the model's error can be estimated about 5× more efficiently than by
+sampling, but not yet deduced from its weights (see
+[Estimating the error](#estimating-the-error-arcs-challenge)).
+
 ## Mechanism
 
 ### 1. Events (H1, H2)
@@ -220,21 +227,121 @@ including the rise for positive shifts, where near-ties become more common
 
 ![shift](shift/shift.png)
 
-### Accuracy estimate without sampling: not achieved
+## Estimating the error: ARC's challenge
 
-- **A one-neuron error model fails.** The new-top-2 detector has a biased
-  threshold: it still fires when x_t is up to about 1% *below* the running
-  2nd max (47% firing at 0.75-1% below). Predicting errors from that bias
-  alone (for inputs where the 3rd largest arrives after the max and 2nd)
-  gives 8,858 errors where the model makes 833. Downstream neurons,
-  presumably neuron 12's exact "below the 2nd max" signal, correct most of
-  the detector's false alarms. So the decision near ties is made jointly by
-  several neurons.
-- What we have instead is a **mechanistic attribution of errors**: 80% fall in
-  the 7% of inputs that the max(0, …) convention and finite comparison
-  resolution single out. Turning this into a sampling-free accuracy estimate
-  would need a model of how the detector, neuron 12 and the readout jointly
-  resolve near-ties.
+ARC's main challenge for AlgZoo is a *mechanistic estimate* of a model's
+accuracy. The estimate should reason from the model's structure rather than
+sample it, and it should match random sampling in **mean squared error for
+the same compute**, scored over noisy copies of the model. ARC poses it for
+its 16x10 model; we tried it on this one, where our explanation is
+strongest. The plan and every step's details are in
+[docs/PLAN.md](../../docs/PLAN.md) (steps 9-13).
+
+**In short: we beat sampling about 5× by using exact probabilities, but no
+deductive estimate is in reach.** Every one of the model's errors turns out
+to be crosstalk: inputs that don't affect the true answer perturb a
+comparison through many neurons switching on and off.
+
+### The scoring harness
+
+`python scripts/estimation_harness.py --hidden 32 --seq-len 10`
+(`estimation/summary.json`). The family is the model plus 16 copies with
+relative noise on every weight (`w + σ·|w|·ε`, σ = 0.001 and 0.003). The
+model is sensitive to this: the error rates range from 0.56% to 1.53%.
+Each copy's ground truth uses 2^25 inputs, and compute is counted in
+multiply-adds (10,880 per forward pass). Plain sampling's measured MSE
+matches p(1 − p)/N at every budget, which is the line any estimator has to
+beat.
+
+![MSE versus compute](estimation/mse_vs_compute.png)
+
+### What works: exact probabilities (E1)
+
+The inputs are split into 92 cells: max < 0, only the 2nd < 0, and a grid
+over the relative gaps max-2nd and 2nd-3rd. Each cell's probability is
+computed exactly from a 1-D integral over the order statistics of 10
+Gaussians. Only the error within each cell is sampled, with the budget
+spread by a fixed Neyman allocation. **E1 beats sampling by 4.4-7.5× at
+every budget,** on the noisy copies as well as the model itself.
+
+Splitting on the max-2nd gap found a third blind spot. Near-ties between
+the max and the 2nd cause errors too, usually predicting the max's position
+(`estimation/cells.md`):
+
+| errors | share |
+|---|---|
+| negative values | 41% |
+| 2nd-3rd near-ties | 39% |
+| max-2nd near-ties | 14% |
+| none of these | 6% |
+
+### What doesn't help: integrating along tie lines (E2)
+
+Along a line through an input in the tie direction, the model is piecewise
+linear, so its error on that line can be integrated exactly
+(`algzoo_interp/lines.py`). E2 does this inside E1's cells where the pilot
+finds it cheaper. **It does no better than E1 (3.6-7.4×).** Whether a line
+has errors depends on the rest of the input, not on the position along the
+line. Over the near-tie window, the per-line error has a standard deviation
+6.2× its mean, and each line costs about 21 forward passes.
+
+### Why a deductive estimate isn't in reach
+
+`python scripts/tie_offsets.py` (`ties/summary.json`) and
+`python scripts/crosstalk.py` (`crosstalk/summary.json`):
+
+- **Near-tie errors aren't a biased threshold.** The point where the model
+  switches between the 2nd and 3rd can be found exactly. A first-order
+  formula at the tie matches the exact walk on 75% of lines and captures
+  89% of the mean error. But the offset of that switch point from the true
+  tie is noise-like and roughly centred, within about ±0.1% of the values.
+  The arrival positions of the max and the pair explain 2% of it. A fit
+  linear in all ten inputs, within each position cell, explains 45%
+  (held out).
+- **One exception: when the later element of the pair is the last input,**
+  the tie error rate is 4× higher (0.0055 against 0.0014). That case is
+  20% of inputs and 45% of the tie error.
+- **The last step is a vote.** For a given first nine inputs, the value of
+  x_9 at which the model switches between position 9 and the earlier 2nd
+  lies within about ±0.4% of the true 2nd. It is uncorrelated with every
+  single neuron's threshold (|r| ≤ 0.06). Near the crossing it equals a
+  weighted average of all active neurons' thresholds, so the running 2nd
+  is read off by cancellation across many neurons.
+- **The negative-value blind spot isn't a rule.** With only the max
+  positive, 83% of wrong answers point at the 3rd largest, and the error
+  falls smoothly as the gap between the two negatives grows (about 50% at
+  a gap under 1% of the max, 2-6% above 30%). The model ranks negative
+  values, just coarsely, without its explicit running-2nd memory, which
+  holds max(0, 2nd) = 0.
+- **Irrelevant inputs change the hard decisions.** The test keeps the top
+  three inputs, redraws every other input below them, and counts changed
+  predictions:
+
+  | cell | error | predictions changed |
+  |---|---|---|
+  | only the max positive | 17.0% | 18.2% |
+  | all negative | 66.4% | 31.4% |
+  | 2nd-3rd near-tie | 21.8% | 20.8% |
+  | typical | 0.02% | 0.02% |
+
+- **The crosstalk is nonlinear and spread out.** The gradient with respect
+  to the redrawn inputs doesn't predict it (R² far below 0). The 12 most
+  responsible neurons reproduce about half the flips (49% and 54%). The
+  biggest single carrier is neuron 12 (26-29%), which reads the last input
+  even when it is irrelevant and whose readout weights reach every logit.
+
+So a deductive estimate would need a statistical model of how irrelevant
+inputs flip neurons across the whole state. That is a deeper explanation
+than the one in this write-up. The circuit above explains what the model
+does right; its errors are the residue of imperfect cancellation across
+many neurons.
+
+**An earlier, related finding.** A one-neuron error model fails in the
+same way. The new-top-2 detector has a biased threshold: it still fires
+when x_t is up to about 1% *below* the running 2nd max (47% firing at
+0.75-1% below). Predicting errors from that bias alone (for inputs where
+the 3rd largest arrives after the max and 2nd) gives 8,858 errors where
+the model makes 833. Several neurons decide near-ties together.
 
 ## Generality
 
@@ -272,7 +379,11 @@ failing 8x10 model has no new-max detector at all.
   input drops out of the top two.
 - **Neurons 4, 8, 9** have no clear role (ablation costs under 1%, or 8% for
   neuron 8).
-- **No sampling-free accuracy estimate** (see above).
+- **The errors themselves.** They are crosstalk: irrelevant inputs perturb
+  hard comparisons through many neurons switching (see "Estimating the
+  error"). There is no statistical model of that crosstalk, so no
+  deductive accuracy estimate. Exact cell probabilities (E1) beat sampling
+  about 5×.
 
 ## Reproducing
 
@@ -288,6 +399,9 @@ python scripts/readout_analysis.py --hidden 32 --seq-len 10  # readout/
 python scripts/clock_test.py --hidden 32 --seq-len 10        # clock/
 python scripts/wiring.py --hidden 32 --seq-len 10            # wiring/
 python scripts/shift_test.py --hidden 32 --seq-len 10        # shift/
+python scripts/estimation_harness.py --hidden 32 --seq-len 10 # estimation/
+python scripts/tie_offsets.py --hidden 32 --seq-len 10       # ties/
+python scripts/crosstalk.py --hidden 32 --seq-len 10         # crosstalk/
 python scripts/compare_models.py && python scripts/summarize_causal.py  # ../compare/
 python scripts/readout_generality.py                         # ../compare/
 ```

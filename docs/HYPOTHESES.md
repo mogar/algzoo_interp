@@ -31,6 +31,7 @@ inputs, but we haven't shown the model *uses* it that way.
 | [H10](#h10-errors-are-value-dependent-noise-overwhelming-the-position-margin) | Errors are value-dependent noise that outweighs the position margin | correlational |
 | [H11](#h11-a-top-two-shift-register-carries-the-2nd-maxs-position) | A top-two shift register carries the 2nd max's position | causal |
 | [H12](#h12-a-separate-code-says-which-top-two-input-is-the-max) | A separate code says which top-two input is the max | causal at group level |
+| [H13](#h13-the-errors-are-crosstalk-from-irrelevant-inputs) | The errors are crosstalk: irrelevant inputs perturb hard comparisons through many neurons | causal (redraw test) |
 
 ## Sources
 
@@ -49,6 +50,8 @@ Every number below comes from one of these scripts, run with
 | `explain_32x10.py` | `explain/summary.json` | surrogate, resample and error analysis (H8) |
 | `shift_test.py` | `shift/summary.json` | error prediction on shifted inputs (H8) |
 | `estimation_harness.py` | `estimation/{cells.md, summary.json}` | error by exact cell, including max-2nd near-ties (H8) |
+| `tie_offsets.py` | `ties/summary.json` | where the model switches near ties, and the last-step vote (H13) |
+| `crosstalk.py` | `crosstalk/summary.json` | redraw test, linearity and carriers of crosstalk (H13) |
 | `readout_analysis.py` | `readout/summary.json` | readout codes and patching (H9-H12) |
 | `wiring.py` | `wiring/summary.json` | shift-register weights and link cuts (H11) |
 | `compare_models.py`, `summarize_causal.py` (no flags) | `results/compare/{compare,causal}.md` | other seeds and sizes (§G) |
@@ -575,6 +578,48 @@ measured, so several neurons resolve near-ties together.
 near-tie blind spot was found during step 10 and isn't in the shift test's
 classes.
 
+### H13. The errors are crosstalk from irrelevant inputs
+
+**Claim.** In all three blind spots, the model's decision depends on
+inputs that don't affect the true answer. They reach the decision through
+activation-pattern switches spread over many neurons. So the errors are
+resolution limits set by crosstalk, not rules on the top values.
+
+**Evidence** (`crosstalk.py`, `tie_offsets.py`):
+- **Redraw test.** Keeping the top three inputs and redrawing the rest below
+  them changes 18.2% of predictions when only the max is positive (error
+  17.0%), 31.4% when all inputs are negative (error 66.4%), and 20.8% at
+  2nd-3rd near-ties (error 21.8%). In a typical cell it changes 0.02%
+  (error 0.02%).
+- **Not linear.** The gradient with respect to the redrawn inputs doesn't
+  predict the change in the 2nd-vs-3rd logit difference (R² far below 0),
+  and it over-predicts flips (26% against 15% actual, only the max
+  positive).
+- **Spread out.** Copying the 12 best neurons' final states from the
+  redrawn input reproduces 49% (only the max positive) and 54% (near-tie)
+  of the flips. The largest single carrier is neuron 12 (26-29%), which
+  reads the last input even when it is irrelevant.
+- **Near ties have no fixed offset.** The model's switch point near a
+  2nd-3rd tie is offset from the true tie by a roughly centred, noise-like
+  amount, about ±0.1% relative. The arrival positions of the max and the
+  pair explain 2% of the per-line error. A fit linear in all ten inputs
+  within each position cell explains 45% of the offset (held out).
+- **The last step is a vote.** Given the first nine inputs, the x_9 at
+  which the model switches between position 9 and the earlier 2nd lies
+  within about ±0.4% of the true 2nd. It is uncorrelated with each single
+  neuron's threshold (|r| ≤ 0.06): the running 2nd is read off by
+  cancellation across many neurons.
+- **Negative values are ranked coarsely, not by a rule.** With only the
+  max positive, 83% of wrong answers point at the 3rd largest. The error
+  falls smoothly from about 50% to 2-6% as the 2nd-3rd gap grows from
+  under 1% to over 30% of the max.
+
+**Consequence.** No deductive accuracy estimate is in reach without a
+statistical model of this crosstalk (results/2nd_argmax_32x10/README.md,
+"Estimating the error").
+
+**Status.** Causal for the redraw test. The neuron-level account is partial.
+
 ## F. Neuron roles in 32x10
 
 *Drop* is the accuracy lost under mean ablation at all steps
@@ -692,7 +737,8 @@ These are also the open items in the [PLAN.md roadmap](PLAN.md#open-questions).
 - **Neurons 8, 4 and 9.** Neuron 8 costs 8% when ablated and carries the max
   with a weight that grows with lag. Its role is unclear. Neurons 4 and 9
   cost less than 1%.
-- **A sampling-free accuracy estimate.** H8 attributes errors to mechanisms,
-  but turning that into an accuracy estimate without sampling would need a
-  model of how the detector, neuron 12 and the readout resolve near-ties
-  together.
+- **A statistical model of the crosstalk** (H13): how irrelevant inputs
+  flip which neurons, well enough to predict the error rate of each blind
+  spot. That would give the deductive accuracy estimate that ARC's
+  challenge asks for. Neuron 12's reading of an irrelevant last input is
+  the most structured piece.

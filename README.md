@@ -32,6 +32,10 @@ how many steps ago each arrived.
   fall in three identified blind spots: negative values, and two kinds of
   near-tie. The first two also predict how the error rate changes when a
   constant is added to every input.
+- **Estimating the error (ARC's challenge).** Exact probabilities of input
+  classes estimate the error rate about 5× more efficiently than sampling.
+  A deductive estimate isn't in reach: every error is crosstalk, with
+  irrelevant inputs perturbing hard comparisons through many neurons.
 
 These mechanisms recur across all five training seeds. We also have a
 complete, exact explanation of a 4-neuron, 3-input model, including its exact

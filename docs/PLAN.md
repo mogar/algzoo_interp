@@ -89,7 +89,7 @@ logits = W_out @ h_{seq_len-1}                one logit per input position
 |---|---|---|
 | Rebuild (≥ 99% agreement) | partial: ratio readout 99.78%, two-number formula 98.84% | pass for correct behaviour: 99.44%, exactly the inputs the model gets right |
 | Resample check | pass: 99.76% | pass: 99.17%, at the (accuracy)² ceiling |
-| Accuracy without sampling | pass: exact 0.98455 vs sampled 0.98443 ± 0.00012 | partial: 80% of errors attributed to two mechanisms, which also predict errors on shifted inputs; no sampling-free estimate |
+| Accuracy without sampling | pass: exact 0.98455 vs sampled 0.98443 ± 0.00012 | partial: 94% of errors attributed to three blind spots; exact cell probabilities beat sampling 4.4-7.5× (E1); no deductive estimate, because the errors are crosstalk (H13) |
 | Write-up | done | done |
 
 ## Roadmap
