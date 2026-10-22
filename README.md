@@ -153,6 +153,7 @@ weights/         downloaded checkpoints (gitignored)
 | `shift_test.py` | Do the error mechanisms predict errors on shifted inputs? |
 | `readout_generality.py` | Does the readout story hold for other seeds and sizes? |
 | `estimation_harness.py` | How well does an error estimator do against sampling, per unit of compute? |
+| `tie_offsets.py` | Where exactly do the near-tie errors come from? |
 | `plot_regions_2d.py`, `neuron_hypotheses.py` | Figures for GEOMETRY.md, and early evidence for HYPOTHESES.md |
 | `run_all.sh` | Regenerate every committed result |
 

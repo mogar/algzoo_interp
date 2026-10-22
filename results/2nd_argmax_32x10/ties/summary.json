@@ -1,0 +1,107 @@
+{
+  "model": "2nd_argmax_32x10",
+  "tie_lines": {
+    "n": 262144,
+    "gamma": 0.03,
+    "tie_error_mean": 0.0023608427558267486,
+    "per_line_sd_over_mean": 5.882386825757473,
+    "by_case": [
+      {
+        "case": "M first (M < A < B)",
+        "B_is_last": false,
+        "prob": 0.2291717529296875,
+        "share_of_tie_error": 0.13803441856865303,
+        "mean": 0.0014219795981250127,
+        "lean_toward_B_quartiles": [
+          -0.0009773675738737886,
+          -5.8151775220717344e-05,
+          0.0009660950118980103
+        ]
+      },
+      {
+        "case": "M first (M < A < B)",
+        "B_is_last": true,
+        "prob": 0.09798049926757812,
+        "share_of_tie_error": 0.23004993711294325,
+        "mean": 0.005543059400302602,
+        "lean_toward_B_quartiles": [
+          -0.004708769380944156,
+          -0.0006127875634923583,
+          0.003285794513232249
+        ]
+      },
+      {
+        "case": "M between (A < M < B)",
+        "B_is_last": false,
+        "prob": 0.22959136962890625,
+        "share_of_tie_error": 0.1385553693817567,
+        "mean": 0.0014247375265652657,
+        "lean_toward_B_quartiles": [
+          -0.0015222424262049577,
+          -0.0005713724743241763,
+          0.0003259330476221929
+        ]
+      },
+      {
+        "case": "M between (A < M < B)",
+        "B_is_last": true,
+        "prob": 0.09808349609375,
+        "share_of_tie_error": 0.22426699913600784,
+        "mean": 0.005398044945045403,
+        "lean_toward_B_quartiles": [
+          -0.0055760351539247705,
+          -0.001365561986984934,
+          0.0024010888959721094
+        ]
+      },
+      {
+        "case": "M last (A < B < M)",
+        "B_is_last": false,
+        "prob": 0.3257026672363281,
+        "share_of_tie_error": 0.18930975202004185,
+        "mean": 0.001372204165400904,
+        "lean_toward_B_quartiles": [
+          -0.0008517021388543376,
+          -0.0001604114613513508,
+          0.00039953146063932655
+        ]
+      }
+    ],
+    "r2_positions": 0.02049387201988173,
+    "r2_positions_and_g12_bin": 0.6189181392175056,
+    "n_groups_positions_and_g12_bin": 1647,
+    "first_order": {
+      "mean": 0.0021106262149948114,
+      "share_of_exact_mean": 0.8940138896525901,
+      "lines_within_0.1pct_of_exact": 0.7549171447753906,
+      "corr_with_exact": 0.6469300881869545,
+      "pair_are_top_two_logits_at_tie": 0.9918746948242188
+    }
+  },
+  "offset_predictability": {
+    "n_lines": 490749,
+    "offset_sd": 0.003984553558959022,
+    "r2_cell_mean": 0.1288286268343849,
+    "r2_affine_in_3_ratios": 0.3335873845040277,
+    "r2_linear_in_all_inputs_held_out": 0.44530204176281485
+  },
+  "last_input": {
+    "n": 65536,
+    "mean": 0.005438663476484232,
+    "mean_se": 0.00016128403571534207,
+    "plain_mean": 0.0052032470703125,
+    "plain_se": 0.0002810397508838092,
+    "variance_reduction": 3.036356351226323,
+    "by_piece": {
+      "last input below the running 2nd": 0.003602885151898564,
+      "last input is the 2nd": 0.0008798376539121953,
+      "last input is the max": 0.0009559406706734733
+    },
+    "quantiles_50_90_99_999": [
+      0.0012358466792907752,
+      0.003993776598356064,
+      0.05233840397592817,
+      0.6568569334509068
+    ]
+  }
+}

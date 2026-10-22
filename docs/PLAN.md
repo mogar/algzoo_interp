@@ -359,6 +359,61 @@ noisy family.
 **Done when** a fully deductive near-tie estimate beats sampling on MSE
 versus compute.
 
+**Progress: the offset is measured, and it isn't simple**
+(`python scripts/tie_offsets.py --hidden 32 --seq-len 10`,
+`results/2nd_argmax_32x10/ties/summary.json`):
+- **The first-order switch point is usually exact.** One forward pass with
+  derivatives at the tie gives s* = −ΔL/ΔL′. It matches the exact walk on
+  75% of 2nd-3rd tie lines and captures 89% of the mean tie error. The
+  rest is pattern changes near the tie or a third logit.
+- **Positions explain almost nothing.** The (max, A, B) arrival positions
+  explain 2% of the per-line tie error. The arrival order doesn't decide
+  the error either: when the max arrives last, so that A against B is a
+  new-max comparison made by an exact detector, the tie error is no smaller
+  (0.00137, against 0.00142 otherwise).
+- **The last input is the exception.** When the later element of the pair
+  is the last input, the tie error rate is about 4× higher (0.0055 against
+  0.0014). That case is 20% of inputs and about 45% of the tie error.
+- **Offsets are small, roughly centred, noise-like.** The interquartile
+  range is about ±0.1% relative, wider when the last input is involved. Fit
+  separately within each position cell, they are not a simple function of
+  the values:
+
+  | description, fitted per position cell | R² of the offset |
+  |---|---|
+  | the cell's mean | 0.13 |
+  | affine in max/mid, 4th/mid and last/mid | 0.33 |
+  | linear in all ten inputs over mid (held out) | 0.45 |
+
+  The offset depends on which neurons happen to be on, so a closed-form δ
+  from a few explanation variables would leave most of it unexplained.
+- **Integrating out the last input exactly** (given x_0..x_8, every step-9
+  pre-activation is affine in x_9) leaves a third of the variance (3.0×
+  reduction). Two-thirds of the error is in the piece where the last input
+  is below the running 2nd: those errors are already fixed by the first
+  nine inputs.
+
+**What this means for E3.** The near-tie error is the leftover imprecision of
+many neurons. It isn't one biased threshold, so it can't be derived as a
+handful of per-case constants. Candidate routes, still to be chosen:
+
+1. **Moment propagation (deductive).** Treat the offset as noise. Get its
+   distribution in each position case by propagating means and
+   covariances of the hidden state through the network, with the
+   explanation saying which neurons are on in that case. The near-tie
+   error is then Σ_cases P(case) × (tie density) × E|δ|. Start with the
+   last-input case, a single-step decision: the offset is a linear readout
+   of h_8 minus the true value.
+2. **Last step exact, prefix sampled (semi-mechanistic).** Integrate x_9 out
+   in closed form (one step, so about 1-2 forward passes), and stratify the
+   first nine inputs like E1. It is a better sampler, not a deduction.
+3. **A realistic bar for "deductive".** A deterministic estimate with bias
+   b beats sampling wherever b² < p(1 − p)/N. For 32x10 (p = 0.0056), a
+   10% bias matches sampling up to about 18,000 samples (2×10⁸
+   multiply-adds), if the estimate is much cheaper than that. That would
+   make routes 1 and E4 worth scoring even if they are only accurate to
+   10-20%.
+
 **Step 13: E4, the negative-value blind spot, and the full estimate.**
 - [ ] Derive what the model predicts when the 2nd largest (or the max) is
       negative, and the error that follows. At shift 0 the measured error is

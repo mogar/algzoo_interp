@@ -51,6 +51,8 @@ CASES = {
                             "--repeats", "2", "--pilot", "256", "--e2-pilot", "32"],
                            ["2nd_argmax_4x3/estimation/summary.json", "2nd_argmax_4x3/estimation/cells.md",
                             "2nd_argmax_4x3/estimation/mse_vs_compute.png"]),
+    "tie_offsets": (["tie_offsets.py", "--hidden", "32", "--seq-len", "10", "--n", "2048", "--n-last", "1024"],
+                    ["2nd_argmax_32x10/ties/summary.json"]),
     "readout_analysis": (["readout_analysis.py", "--hidden", "32", "--seq-len", "10", "--n", "8192"],
                          ["2nd_argmax_32x10/readout/summary.json", "2nd_argmax_32x10/readout/codes.png"]),
 }
