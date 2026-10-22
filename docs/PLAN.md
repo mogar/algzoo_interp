@@ -441,6 +441,51 @@ cancellation error itself.
 **Done when** the combined estimate is scored, and any gap to sampling is
 attributed to a named class.
 
+**Progress: there is no rule to count; every error is crosstalk**
+(`python scripts/crosstalk.py --hidden 32 --seq-len 10`,
+`results/2nd_argmax_32x10/crosstalk/summary.json`):
+- **The model does rank negative values, coarsely.** With only the max
+  positive, 83% of wrong predictions point at the 3rd largest. The error
+  falls smoothly with the 2nd-3rd gap: about 50% when the gap is under 1%
+  of the max, down to 2-6% when it is over 30% (17% if the 2nd is more
+  negative than the max is positive). At a fixed gap it rises as the 2nd
+  gets more negative. So there is no fixed rule (such as "pick the
+  last negative") whose error could be counted. Its explicit memory of the
+  2nd (neuron 31 ≈ max(0, 2nd)) holds 0 here, so which negative is largest
+  must be kept elsewhere, imprecisely.
+- **Irrelevant inputs change the hard decisions.** The test keeps the
+  positions and values of the top three, and redraws every other input
+  below them:
+
+  | cell | error | predictions changed |
+  |---|---|---|
+  | only the max positive | 17.0% | 18.2% |
+  | all negative | 66.4% | 31.4% |
+  | 2nd-3rd near-tie (g23 < 0.003) | 21.8% | 20.8% |
+  | typical (g12, g23 ≥ 0.1) | 0.02% | 0.02% |
+
+  In every error-prone cell, the inputs that don't affect the true answer
+  move the model's answer about as often as it is wrong.
+- **The crosstalk isn't linear.** Predicting the change in the 2nd-vs-3rd
+  logit difference from its gradient with respect to the redrawn inputs
+  fails (R² far below 0), and it over-predicts sign flips (26% against 15%
+  actual, only the max positive). The crosstalk passes through
+  activation-pattern switches.
+- **The crosstalk is spread over many neurons.** Copying the final states
+  of the 12 best neurons from the redrawn input reproduces 49% (only the
+  max positive) and 54% (near-tie) of the flips. The largest single
+  carrier is neuron 12 (26-29%): it reads the last input even when that
+  input is irrelevant, and its readout weights reach every logit. The
+  rest is spread over the delay line and membership flags.
+
+**What this means for the challenge.** None of the three blind spots is a
+rule on the top values. Each is a resolution limit set by how the other
+inputs perturb a comparison, through many pattern switches. A deductive
+estimate of 32x10's error would need a model of that crosstalk: a
+statistical account of how irrelevant inputs flip which neurons, at the
+level of the whole state. That is a qualitatively deeper explanation than
+the one in HYPOTHESES.md.
+
 ### Step 7: Optional interactive viewer — not started
 
 Only if static plots become limiting: a Streamlit app under `app/` to step

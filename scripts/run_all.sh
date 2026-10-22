@@ -48,4 +48,5 @@ run scripts/readout_generality.py
 run scripts/estimation_harness.py --hidden 4 --seq-len 3 --n-truth 4194304
 run scripts/estimation_harness.py --hidden 32 --seq-len 10
 run scripts/tie_offsets.py --hidden 32 --seq-len 10
+run scripts/crosstalk.py --hidden 32 --seq-len 10
 echo "done"

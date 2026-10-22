@@ -154,6 +154,7 @@ weights/         downloaded checkpoints (gitignored)
 | `readout_generality.py` | Does the readout story hold for other seeds and sizes? |
 | `estimation_harness.py` | How well does an error estimator do against sampling, per unit of compute? |
 | `tie_offsets.py` | Where exactly do the near-tie errors come from? |
+| `crosstalk.py` | Do the irrelevant inputs change the model's hard decisions? |
 | `plot_regions_2d.py`, `neuron_hypotheses.py` | Figures for GEOMETRY.md, and early evidence for HYPOTHESES.md |
 | `run_all.sh` | Regenerate every committed result |
 
