@@ -300,16 +300,51 @@ far below it.
   near-tie cells the error is still a coin flip per sample, which is what
   E2 and E3 remove.
 
-**Step 11: E2, exact error along the tie direction.**
-- [ ] For a sampled input, walk the line through it along `x_j − x_k`
-      (2nd vs 3rd) and find every activation-pattern breakpoint, then the
-      exact fraction of the line where the model is wrong. Use the tie
-      density to turn that into an error contribution.
-- [ ] Extend to the other error types H8 doesn't cover, so the estimate is
-      unbiased.
+**Step 11: E2, exact error along the tie direction — done; no gain over E1.**
+- [x] `algzoo_interp/lines.py`: the exact φ-weighted error along a line,
+      found by walking the activation-pattern breakpoints (each step is a
+      forward pass with derivatives). Also the tie lines through an input
+      (`tie_lines`) and the part of a line inside an E1 cell
+      (`cell_interval`). The integral converges to the walk's value as a
+      brute-force grid is refined (`tests/test_lines.py`).
+- [x] E2 (`CellLines`): E1's cells, where each cell's error comes from 0/1
+      samples or from exact integration along the 2nd-3rd or max-2nd tie
+      line through each sample, whichever the pilot finds cheaper. It is
+      unbiased because, given the rest of the input (the line's offset y),
+      the input's own position on the line is N(0, 1) restricted to the
+      in-cell segment.
 
 **Done when** E2's MSE versus compute is measured against sampling on the
 noisy family.
+
+**Outcome** (`results/2nd_argmax_32x10/estimation/summary.json`):
+- **E2 beats sampling by 3.6-7.4×, the same as E1.** The pilot sends only
+  15 of 92 cells to line integration.
+- **Why integrating along s doesn't help:** the tie error is set by the
+  rest of the input, not by the position along the line. Integrated over
+  the relative near-tie window (γ = 0.03), the per-line error has a
+  standard deviation 6.2 times its mean (`e2_tie_window`). Most lines have
+  almost none and a few have a lot. Each line costs about 21 forward passes.
+  So the remaining noise comes from *which lines* have a large boundary
+  offset δ, which is exactly what E3 must predict.
+- **Heavy tails broke the first design.** A few lines are wrong along their
+  whole segment, or on exactly one side of the tie (the model ignores the
+  pair's order). A 1,024-input pilot missed them, underestimated those
+  cells' spread, and starved them of inputs, so E2's MSE stopped falling at
+  large budgets. An 8,192-input pilot, and a 20% margin before choosing
+  line integration, fixed it.
+- **An exact-tie bug, found on 4x3.** When every neuron is off, all
+  logits are 0 and `argmax` returns position 0, but the walk first counted
+  such ties as correct, biasing E2. It now follows argmax's lowest-index
+  rule (`tests/test_lines.py`). The 4x3 E2 numbers are from the fixed code.
+  The 32x10 numbers came from the code before the fix, which only differs
+  on exact logit ties; 32x10 is essentially never all-off. On 4x3, E2 gains
+  1.6-2.0× from 1,024 inputs up, about the same as E1. At 256 inputs it
+  loses (0.14×), because the one-input-per-cell minimum leaves cells with
+  sizeable probability on a single 0/1 sample.
+- **Leads for E3/E4.** Those "blind" lines are rare (about 1 in 3,000 in
+  the low-error cells checked). They often have the last input in the top
+  three, or the max at position 8 or 9, or a 2nd largest just above zero.
 
 **Step 12: E3, the near-tie error from the mechanism.**
 - [ ] Use E2's exact boundary offsets to fit and then *derive* a model of δ

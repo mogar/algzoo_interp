@@ -1,4 +1,4 @@
-"""Score error-rate estimators by mean squared error versus compute (docs/PLAN.md steps 9-10).
+"""Score error-rate estimators by mean squared error versus compute (docs/PLAN.md steps 9-11).
 
 Builds a family of noisy copies of a model: the model itself, plus copies
 with every weight w replaced by w + sigma * |w| * eps. For each copy it computes
@@ -18,6 +18,16 @@ sampled within each cell. The cells split inputs by sign (max < 0; only the
 allocation from a pilot run on the unperturbed model. The allocation is a
 fixed design choice and isn't counted as compute: any allocation keeps E1
 unbiased. The cell table for the unperturbed model goes to cells.md.
+
+It also scores E2 (step 11): the same cells, where each cell's error is
+measured either by 0/1 samples or by exact integration along a tie line
+through each sample (algzoo_interp.lines). The pilot picks whichever has the
+smaller σ √cost (a line method must beat 0/1 samples by 20%, because line
+values are heavy-tailed), and inputs are allocated by Neyman allocation with
+costs.
+As a diagnostic, it integrates every line exactly over the relative 2nd-3rd
+near-tie window (γ = 0.03), to show how the tie error varies from line to
+line (`e2_tie_window` in summary.json).
 
 For seq_len-3 models it also checks the harness against exact cone
 enumeration. The sampled ground truth should be within its standard error of
@@ -39,7 +49,9 @@ import torch as th
 
 from algzoo_interp import randn_inputs
 from algzoo_interp.estimation import (
+    CellLines,
     Stratified,
+    design_cell_lines,
     errors_on,
     forward_macs,
     neyman_weights,
@@ -47,6 +59,7 @@ from algzoo_interp.estimation import (
     score,
     true_error,
 )
+from algzoo_interp.lines import line_error_mass, tie_lines
 from algzoo_interp.loading import add_model_args, load_from_args
 from algzoo_interp.order_stats import cell_prob, gap_cells
 from algzoo_interp.paths import RESULTS_DIR
@@ -55,6 +68,7 @@ from algzoo_interp.plots import LINE_COLOR, savefig
 TRUTH_SEED = 1_000_000
 POOL_SEED = 2_000_000
 E1_SEED = 3_000_000
+E2_SEED = 4_000_000
 G12_EDGES = [0, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.03, 0.1, 0.3, 1.0]
 G23_EDGES = [0, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.03, 0.1, 0.3, 1.0, float("inf")]
 
@@ -81,6 +95,41 @@ def exact_errors(family):
     return out
 
 
+def score_estimator(label, estimator, budgets, family, truths, truth_vars, repeats, seed, macs1):
+    """MSE over the family (repeats per model) at each budget, against sampling at the same compute."""
+    rows = []
+    for N in budgets:
+        est, tru, var, macs = [], [], [], []
+        for j, (m, t, v) in enumerate(zip(family, truths, truth_vars)):
+            for r in range(repeats):
+                e, c = estimator(m.model, N, seed=seed + 1000 * j + r)
+                est.append(e)
+                tru.append(t)
+                var.append(v)
+                macs.append(c)
+        mse, floor = score(est, tru, var)
+        mean_macs = sum(macs) / len(macs)
+        theory = sum(t * (1 - t) for t in truths) / len(truths) / (mean_macs / macs1)
+        rows.append({"budget": N, "macs": mean_macs, "mse": mse, "sampling_mse_same_compute": theory,
+                     "gain": theory / mse if mse > 0 else None})
+        print(f"  {label} N={N:>8}: MSE {mse:.3e}  sampling at same compute {theory:.3e}  gain {theory / mse:.2f}x")
+    return rows
+
+
+def tie_window_diagnostic(model, n, gamma=0.03, seed=5_000_000):
+    """Exact tie error per line over the window |s| < γ |mid| / √2, on n random inputs."""
+    x = randn_inputs(n, model.seq_len, seed=seed, dtype=th.float64)
+    y, u, s, w, mid, others, j, k = tie_lines(x, (1, 2))
+    eps = th.minimum(gamma * mid.abs() / 2**0.5, w)
+    mass, passes = line_error_mass(model, y, u, -eps, eps, j, k)
+    f = mass / (th.special.ndtr(w) - th.special.ndtr(-w))
+    inside = errors_on(model, x) * (s.abs() < eps)
+    q = f.quantile(th.tensor([0.5, 0.9, 0.99], dtype=th.float64)).tolist()
+    return {"gamma": gamma, "n": n, "mean": f.mean().item(), "sd": f.std().item(),
+            "sd_over_mean": (f.std() / f.mean()).item(), "quantiles_50_90_99": q,
+            "bernoulli_sd": inside.std().item(), "cost_forward_passes": 2 * passes.double().mean().item()}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     add_model_args(parser)
@@ -91,6 +140,8 @@ def main():
     parser.add_argument("--budgets", nargs="+", type=int, default=[2**k for k in range(8, 21, 2)])
     parser.add_argument("--repeats", type=int, default=8, help="E1 estimates per model and budget")
     parser.add_argument("--pilot", type=int, default=2**14, help="E1 pilot inputs per cell")
+    parser.add_argument("--e2-pilot", type=int, default=2**13, help="E2 pilot inputs per cell")
+    parser.add_argument("--e2-max-budget", type=int, default=2**18, help="largest E2 budget (it is slow to run)")
     args = parser.parse_args()
 
     model, name = load_from_args(args)
@@ -161,23 +212,24 @@ def main():
                       "pilot_per_cell": args.pilot, "predicted_variance_ratio": plain_var / neyman_var}
     print(f"  E1: {len(cells)} cells, pilot error {total:.5f}; predicted gain over sampling "
           f"{plain_var / neyman_var:.2f}x (unperturbed model)")
-    e1_rows = []
-    for N in args.budgets:
-        est, tru, var, macs = [], [], [], []
-        for j, (m, t, v) in enumerate(zip(family, truths, truth_vars)):
-            for r in range(args.repeats):
-                e, c = e1(m.model, N, seed=E1_SEED + 1000 * j + r)
-                est.append(e)
-                tru.append(t)
-                var.append(v)
-                macs.append(c)
-        mse, floor = score(est, tru, var)
-        mean_macs = sum(macs) / len(macs)
-        theory = sum(t * (1 - t) for t in truths) / len(truths) / (mean_macs / macs1)
-        e1_rows.append({"budget": N, "macs": mean_macs, "mse": mse, "sampling_mse_same_compute": theory,
-                        "gain": theory / mse if mse > 0 else None})
-        print(f"  E1 N={N:>8}: MSE {mse:.3e}  sampling at same compute {theory:.3e}  gain {theory / mse:.2f}x")
+    e1_rows = score_estimator("E1", e1, args.budgets, family, truths, truth_vars, args.repeats, E1_SEED, macs1)
     S["e1"] = e1_rows
+
+    # E2: per-cell choice of 0/1 samples or exact tie-line integration
+    methods, alloc, design_rows, predicted = design_cell_lines(family[0].model, cells, probs, T, args.e2_pilot)
+    S["e2_design"] = {"pilot_per_cell": args.e2_pilot, "predicted_gain": predicted, "cells": design_rows,
+                      "n_cells_by_method": {m: sum(r["method"] == m for r in design_rows)
+                                            for m in sorted({r["method"] for r in design_rows})}}
+    print(f"  E2: methods {S['e2_design']['n_cells_by_method']}; predicted gain over sampling {predicted:.2f}x")
+    e2 = CellLines(cells, probs, methods, alloc, T)
+    e2_rows = score_estimator("E2", e2, [N for N in args.budgets if N <= args.e2_max_budget], family, truths,
+                              truth_vars, args.repeats, E2_SEED, macs1)
+    S["e2"] = e2_rows
+    if T > 3:
+        S["e2_tie_window"] = tie_window_diagnostic(family[0].model, 2**16)
+        d = S["e2_tie_window"]
+        print(f"  tie window: per-line tie error mean {d['mean']:.5f}, sd/mean {d['sd_over_mean']:.1f}, "
+              f"cost {d['cost_forward_passes']:.1f} forward passes")
 
     fig, ax = plt.subplots(figsize=(5.8, 3.8))
     ax.loglog([r["macs"] for r in rows], [r["theory_mse"] for r in rows], color=LINE_COLOR, label="sampling, theory p(1-p)/N")
@@ -185,6 +237,8 @@ def main():
               label="sampling, measured")
     ax.loglog([r["macs"] for r in e1_rows], [max(r["mse"], 1e-30) for r in e1_rows], "s", color="#009e73",
               label="E1: exact cell probabilities")
+    ax.loglog([r["macs"] for r in e2_rows], [max(r["mse"], 1e-30) for r in e2_rows], "^", color="#cc79a7",
+              label="E2: E1 + exact tie-line integration")
     if exact is not None:
         m_ex = sum(S["exact"]["macs"]) / len(family)
         ax.axvline(m_ex, color="#d55e00", ls="--", label=f"exact cones: MSE 0, {m_ex:.1e} MACs")

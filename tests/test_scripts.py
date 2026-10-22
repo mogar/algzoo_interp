@@ -48,7 +48,7 @@ CASES = {
                            ["compare/readout_generality.md", "compare/readout_generality.json"]),
     "estimation_harness": (["estimation_harness.py", "--hidden", "4", "--seq-len", "3", "--sigmas", "0.001", "--n-per", "1",
                             "--n-truth", "65536", "--pool", "65536", "--budgets", "256", "4096",
-                            "--repeats", "2", "--pilot", "256"],
+                            "--repeats", "2", "--pilot", "256", "--e2-pilot", "32"],
                            ["2nd_argmax_4x3/estimation/summary.json", "2nd_argmax_4x3/estimation/cells.md",
                             "2nd_argmax_4x3/estimation/mse_vs_compute.png"]),
     "readout_analysis": (["readout_analysis.py", "--hidden", "32", "--seq-len", "10", "--n", "8192"],

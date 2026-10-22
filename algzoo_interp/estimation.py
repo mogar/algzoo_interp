@@ -12,7 +12,9 @@ the pieces:
 - `score`: MSE of an estimator over a family, with the ground truth's own
   sampling variance subtracted;
 - `Stratified`: E1, exact cell probabilities times the error sampled within
-  each cell (algzoo_interp.order_stats).
+  each cell (algzoo_interp.order_stats);
+- `CellLines`: E2, the same cells, with the error in each cell integrated
+  exactly along a tie line where that is cheaper (algzoo_interp.lines).
 
 Compute is counted in multiply-adds (MACs). Every estimator takes
 (model, budget, seed) and returns (estimate, macs), where `budget` is the
@@ -26,6 +28,7 @@ import torch as th
 from alg_zoo.tasks import task_2nd_argmax
 
 from .data import randn_inputs
+from .lines import cell_interval, line_error_mass, tie_lines
 from .order_stats import sample_cell
 
 
@@ -138,3 +141,96 @@ def neyman_weights(model, cells, probs, n, per_cell, seed=0):
         rates.append(k / per_cell)
         weights.append(P * (p * (1 - p)) ** 0.5)
     return rates, weights
+
+
+
+# The true answer along a tie line, for s > 0 and s < 0 (x_j > x_k at s > 0):
+# for ranks (1, 2) the 2nd largest is the larger of the pair, for (0, 1) the smaller.
+def _truth(ranks, j, k):
+    return (j, k) if ranks == (1, 2) else (k, j)
+
+
+def cell_values(model, x, cell, method):
+    """Per-input values whose mean, over x sampled in `cell`, is the cell's error rate.
+
+    method "sample": the 0/1 error at x (cost 1 forward pass each).
+    method (1, 2) or (0, 1): the exact error rate along the tie line through x
+    between the inputs at those ranks, over the part of the line inside the
+    cell, |s| in [t_lo, t_hi] (cost 2 forward passes per walk step). Given the
+    line's y, x's own s is N(0, 1) restricted to that part, so this is unbiased.
+    Returns (values, cost in forward passes).
+    """
+    if method == "sample":
+        return errors_on(model, x), float(len(x))
+    y, u, s, w, mid, others, j, k = tie_lines(x, method)
+    lo, hi = cell_interval(cell, method, mid, others, w)
+    pos, neg = _truth(method, j, k)
+    m1, p1 = line_error_mass(model, y, u, lo, hi, pos, neg)
+    m2, p2 = line_error_mass(model, y, u, -hi, -lo, pos, neg)
+    denom = 2 * (th.special.ndtr(-lo) - th.special.ndtr(-hi))
+    return (m1 + m2) / denom, 2.0 * (p1 + p2).sum().item()
+
+
+class CellLines:
+    """E2: E1's cells, with each cell's error measured by its cheapest method.
+
+    Each cell uses 0/1 samples or exact integration along one of the tie lines
+    (`cell_values`), whichever has the smaller σ √cost in the pilot. Inputs are
+    allocated by Neyman allocation with costs, n_c ∝ P(c) σ_c / √cost_c, which
+    minimises the variance for a given total compute. Every cell gets at least
+    one input, so the estimate is unbiased for any design.
+    """
+
+    def __init__(self, cells, probs, methods, alloc, n):
+        self.cells, self.probs, self.methods, self.n = cells, probs, methods, n
+        total = sum(alloc)
+        self.alloc = [a / total for a in alloc]
+
+    def __call__(self, model, budget, seed):
+        """`budget` is in forward passes; the result's compute is in multiply-adds."""
+        gen = th.Generator().manual_seed(seed)
+        est, cost = 0.0, 0.0
+        for c, P, meth, a in zip(self.cells, self.probs, self.methods, self.alloc):
+            m = max(1, int(budget * a))
+            v, k = cell_values(model, sample_cell(c, self.n, m, gen), c, meth)
+            est += P * v.mean().item()
+            cost += k
+        return est, cost * forward_macs(model)
+
+
+def design_cell_lines(model, cells, probs, n, per_cell, seed=0, margin=0.8):
+    """Pilot every method in every cell and pick each cell's cheapest.
+
+    A line method replaces 0/1 samples only if its σ √cost is below `margin`
+    times theirs. Line values are heavy-tailed: a few lines are wrong along
+    their whole segment, and a small pilot can miss them entirely and
+    underestimate σ.
+
+    Returns (methods, allocation weights, rows describing each cell, and the
+    predicted variance of E2 per unit compute relative to plain sampling).
+    """
+    gen = th.Generator().manual_seed(seed)
+    methods, alloc, rows = [], [], []
+    for c, P in zip(cells, probs):
+        x = sample_cell(c, n, per_cell, gen)
+        options = {}
+        for meth in ["sample"] + ([(1, 2), (0, 1)] if c.kind == "pos" else []):
+            v, k = cell_values(model, x, c, meth)
+            if meth == "sample":
+                p = (v.sum().item() + 1) / (per_cell + 2)
+                sd = (p * (1 - p)) ** 0.5
+            else:
+                sd = max(v.std().item(), 1e-9)
+            options[meth] = (sd, k / per_cell, v.mean().item())
+        work = {mth: sd * cost**0.5 for mth, (sd, cost, _) in options.items()}
+        best = min(work, key=work.get)
+        if best != "sample" and work[best] >= margin * work["sample"]:
+            best = "sample"
+        sd, cost, mean = options[best]
+        methods.append(best)
+        alloc.append(P * sd / cost**0.5)
+        rows.append({"cell": c.name, "prob": P, "method": str(best), "pilot_error": mean, "sd": sd, "cost": cost,
+                     "options": {str(k): v for k, v in options.items()}})
+    total = sum(r["prob"] * r["pilot_error"] for r in rows)
+    work = sum(r["prob"] * r["sd"] * r["cost"] ** 0.5 for r in rows) ** 2  # variance × compute
+    return methods, alloc, rows, total * (1 - total) / work
