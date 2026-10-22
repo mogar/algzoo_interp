@@ -205,6 +205,104 @@ for the completion checks `clock_test.py`, `wiring.py`, `shift_test.py` and
 - **Reproducibility.** `pytest -m scripts` smoke-tests every script, and
   `scripts/run_all.sh` reproduces every committed result.
 
+### Steps 9-13: a mechanistic error estimate for 32x10 — current focus
+
+ARC's main challenge
+([blog post](https://www.alignment.org/blog/algzoo-uninterpreted-models-with-fewer-than-1-500-parameters/))
+is a *mechanistic estimate* of a model's accuracy. Such an estimate reasons
+from the model's structure rather than by sampling. It has to match random
+sampling in **mean squared error versus compute**, scored over noisy copies
+of the model (noise added to the weights). ARC poses it for the blog's 16x10
+model; we target 32x10, where our explanation is strongest.
+
+The plan is to split the error by input class:
+
+**error = Σ over input classes P(class) × P(error | class)**
+
+P(class) is an exact probability of an ordering for Gaussian inputs, e.g.
+P(2nd largest < 0) = 11/1024. P(error | class) is the hard part. Near a tie
+between the 2nd and 3rd largest the model is piecewise linear, so its
+decision boundary sits a computable distance δ from the true tie. The error
+is then roughly the density at the tie times |δ|, which turns a rare event
+into a smooth quantity.
+
+The estimators form a ladder, each more deductive than the last. **E3 and E4
+are the target; E1 and E2 are stepping stones.**
+
+| | estimator | how mechanistic |
+|---|---|---|
+| E0 | plain sampling | the baseline to beat |
+| E1 | exact class probabilities × sampled error within each class | the error split is exact |
+| E2 | for each sampled input, the error computed exactly along the tie direction, by walking the activation-pattern breakpoints on that line | exact in one dimension; the mechanism picks the direction |
+| E3 | δ predicted from the weights through the explanation (top-2 detector bias, neuron 12, readout margins), integrated over the order-statistic distribution | deductive |
+| E4 | a mechanistic model of the max(0, …) blind spot: what the model predicts when the 2nd largest is negative | deductive |
+
+**Step 9: scoring harness — done.**
+- [x] `algzoo_interp/estimation.py`: a family of noisy-weight copies
+      (`w + σ·|w|·ε`), high-precision ground-truth error for each copy
+      (cached), compute counted in multiply-adds, and MSE against compute
+      for any estimator.
+- [x] `scripts/estimation_harness.py`: the sampling baseline (E0) on the
+      family, with the measured line checked against p(1 − p)/N.
+- [x] Check the harness on 4x3, where the exact cone method should beat
+      sampling by orders of magnitude.
+
+**Done when** the sampling line matches theory and 4x3's exact method sits
+far below it.
+
+**Outcome** (`results/<model>/estimation/summary.json`):
+- **The family.** It is the model itself plus 8 noisy copies at each of
+  σ = 0.001 and 0.003. 32x10 is very sensitive to weight noise: its error of
+  0.56% rises to 0.60-0.87% at σ = 0.001 and 0.82-1.53% at σ = 0.003. Each
+  ground truth uses 2^25 inputs, which leaves a variance floor of 2.9×10⁻¹⁰.
+- **The sampling baseline matches theory.** On 32x10 the measured MSE is
+  0.99-1.02 times p(1 − p)/N at every budget from 2^8 to 2^20 inputs. One
+  forward pass is 10,880 multiply-adds.
+- **The 4x3 check passes.** The exact cone method costs about 6×10⁴
+  multiply-adds (about 830 samples' worth) and has zero error. Sampling at
+  that compute has an MSE of about 2.5×10⁻⁵. The sampled ground truths
+  agree with the exact values to within their standard errors.
+
+**Step 10: E1, exact class probabilities.**
+- [ ] Analytic probabilities for the classes in H8: 2nd largest negative,
+      both max and 2nd negative, and near-tie bands. The error within each
+      class is still sampled.
+- [ ] Measure how much of the sampling variance the split removes.
+
+**Step 11: E2, exact error along the tie direction.**
+- [ ] For a sampled input, walk the line through it along `x_j − x_k`
+      (2nd vs 3rd) and find every activation-pattern breakpoint, then the
+      exact fraction of the line where the model is wrong. Use the tie
+      density to turn that into an error contribution.
+- [ ] Extend to the other error types H8 doesn't cover, so the estimate is
+      unbiased.
+
+**Done when** E2's MSE versus compute is measured against sampling on the
+noisy family.
+
+**Step 12: E3, the near-tie error from the mechanism.**
+- [ ] Use E2's exact boundary offsets to fit and then *derive* a model of δ
+      as a function of the explanation's quantities: the lags of the max,
+      2nd and 3rd, the values, and the scale. A model of the top-2 detector
+      alone over-predicts errors tenfold (H8), so several neurons decide
+      near-ties together.
+- [ ] Compute δ from the weights (through the detector, neuron 12 and the
+      readout margins), then integrate over the order-statistic
+      distribution without sampling.
+
+**Done when** a fully deductive near-tie estimate beats sampling on MSE
+versus compute.
+
+**Step 13: E4, the negative-value blind spot, and the full estimate.**
+- [ ] Derive what the model predicts when the 2nd largest (or the max) is
+      negative, and the error that follows. At shift 0 the measured error is
+      67% when both are negative and 17.4% when only the 2nd is.
+- [ ] Combine E3, E4 and the remaining classes into one estimate, then score
+      it. Optionally, run ARC's surprise accounting.
+
+**Done when** the combined estimate is scored, and any gap to sampling is
+attributed to a named class.
+
 ### Step 7: Optional interactive viewer — not started
 
 Only if static plots become limiting: a Streamlit app under `app/` to step
@@ -222,10 +320,9 @@ through hidden states for chosen inputs, or to explore cones of small models.
 
 Roughly in order of how much each would add to the 32x10 explanation:
 
-1. **A sampling-free accuracy estimate** for 32x10, the one explanation
-   check that doesn't pass. It needs a joint model of how the top-2
-   detector, neuron 12 and the readout resolve near-ties, plus the max(0, …)
-   blind spot (H8).
+1. **A mechanistic accuracy estimate** for 32x10, the one explanation check
+   that doesn't pass. This is the current focus:
+   [steps 9-13](#steps-9-13-a-mechanistic-error-estimate-for-32x10--current-focus).
 2. **The identity code, neuron by neuron.** H12 shows which neurons say
    which top-two input is the max. It doesn't show how each reference
    neuron's lag-dependent mix combines with the clock to do that at each lag.

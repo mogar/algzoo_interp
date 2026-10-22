@@ -18,6 +18,10 @@ from .hooked import get_weights
 
 EPS_AREA = 1e-12
 
+# Multiply-adds spent so far, for compute accounting (algzoo_interp.estimation).
+# Counts the dot products in clip, area and the linear maps; small bookkeeping is ignored.
+op_count = {"macs": 0}
+
 
 def _normalize(v):
     return v / v.norm()
@@ -27,6 +31,7 @@ def clip(poly, n):
     """Clip a convex spherical polygon (list of unit 3-vectors, in order) to {x : n·x >= 0}."""
     if not poly:
         return []
+    op_count["macs"] += 3 * len(poly)
     d = [float(n @ v) for v in poly]
     out = []
     for i in range(len(poly)):
@@ -46,6 +51,7 @@ def area(poly):
     if len(poly) < 3:
         return 0.0
     total = 0.0
+    op_count["macs"] += 18 * (len(poly) - 2)
     a = poly[0]
     for b, c in zip(poly[1:-1], poly[2:]):
         num = abs(float(a @ th.linalg.cross(b, c)))
@@ -128,6 +134,7 @@ def enumerate_cones(model):
         new_regions = {}
         for pieces, A, rows in regions:
             N = W_ih[:, None] * e_t[None, :] + W_hh @ A  # pre_t = N x
+            op_count["macs"] += 3 * hidden * hidden
             for bits in itertools.product([True, False], repeat=hidden):
                 signs = [N[i] if on else -N[i] for i, on in enumerate(bits)]
                 kept = [q for q in (clip_all(poly, signs) for poly in pieces) if q and area(q) > EPS_AREA]
@@ -146,6 +153,7 @@ def enumerate_cones(model):
     cones = []
     for pieces, A, rows in regions:
         M = W_out @ A
+        op_count["macs"] += 3 * hidden * W_out.shape[0]
         n_out = M.shape[0]
         cone = Cone(pattern=th.tensor(rows), M=M, prob=sum(area(q) for q in pieces) / (4 * math.pi))
         for pred in range(n_out):

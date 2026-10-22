@@ -45,4 +45,6 @@ run scripts/clock_test.py --hidden 32 --seq-len 10
 run scripts/wiring.py --hidden 32 --seq-len 10
 run scripts/shift_test.py --hidden 32 --seq-len 10
 run scripts/readout_generality.py
+run scripts/estimation_harness.py --hidden 4 --seq-len 3 --n-truth 4194304
+run scripts/estimation_harness.py --hidden 32 --seq-len 10
 echo "done"
